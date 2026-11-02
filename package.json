@@ -1,0 +1,10 @@
+{
+  "name": "sniff-player",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "icons": "sh scripts/make-icons.sh",
+    "package": "sh scripts/package.sh"
+  }
+}

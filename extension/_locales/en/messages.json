@@ -1,0 +1,113 @@
+{
+  "extDescription": {
+    "message": "Find the videos a page loads, HLS and MP4 included, and play them in one click. V-AX (v-ax.com)"
+  },
+  "emptyList": {
+    "message": "No videos found in this tab yet. Start the video, or reload the page."
+  },
+  "pastePlaceholder": {
+    "message": "Or paste a video URL (m3u8, mp4)"
+  },
+  "pasteLabel": {
+    "message": "Video URL"
+  },
+  "play": {
+    "message": "Play"
+  },
+  "copy": {
+    "message": "Copy"
+  },
+  "copied": {
+    "message": "Copied"
+  },
+  "live": {
+    "message": "Live"
+  },
+  "qualitiesUpTo": {
+    "message": "$1 qualities, up to $2p"
+  },
+  "qualities": {
+    "message": "$1 qualities"
+  },
+  "fileWithSize": {
+    "message": "$1, $2"
+  },
+  "quality": {
+    "message": "Quality"
+  },
+  "speed": {
+    "message": "Speed"
+  },
+  "copyUrl": {
+    "message": "Copy URL"
+  },
+  "auto": {
+    "message": "Auto"
+  },
+  "autoLevel": {
+    "message": "Auto ($1)"
+  },
+  "retry": {
+    "message": "Retry"
+  },
+  "errRefusedTitle": {
+    "message": "The site refused this video (HTTP $1)"
+  },
+  "errRefusedDetail": {
+    "message": "The link may have expired, or the site only allows viewing on its own page. Reload the page and open the video from the list again."
+  },
+  "errExpiredTitle": {
+    "message": "This link has expired (HTTP 410)"
+  },
+  "errExpiredDetail": {
+    "message": "This site's video links stay valid only briefly. Reload the page, and open the video from the list as soon as it starts playing."
+  },
+  "errNotFoundTitle": {
+    "message": "Video not found (HTTP 404)"
+  },
+  "errNotFoundDetail": {
+    "message": "The link may have expired, or the video was removed."
+  },
+  "errServerTitle": {
+    "message": "The server returned an error (HTTP $1)"
+  },
+  "errServerDetail": {
+    "message": "You can try again later."
+  },
+  "errOfflineTitle": {
+    "message": "Can't reach the video server"
+  },
+  "errOfflineDetail": {
+    "message": "Check your connection. The site may also have blocked this request."
+  },
+  "errDrmTitle": {
+    "message": "Couldn't get the video's key"
+  },
+  "errDrmDetail": {
+    "message": "This video may be protected by DRM. This player can't play protected content."
+  },
+  "errPlayTitle": {
+    "message": "This video can't be played"
+  },
+  "errDecodeDetail": {
+    "message": "Your browser can't decode this video."
+  },
+  "errFileDetail": {
+    "message": "The link may have expired, the site may have refused access, or your browser may not support this format. Reload the page and try again."
+  },
+  "errUrlTitle": {
+    "message": "This URL isn't valid"
+  },
+  "errUrlDetail": {
+    "message": "Use a video URL that starts with http or https."
+  },
+  "errBrowserTitle": {
+    "message": "Your browser isn't supported"
+  },
+  "errBrowserDetail": {
+    "message": "This browser can't play HLS video."
+  },
+  "errRulesDetail": {
+    "message": "The player couldn't set up its protections for this video, so it didn't start. Try again."
+  }
+}

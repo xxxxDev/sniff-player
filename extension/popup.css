@@ -1,0 +1,57 @@
+:root {
+  --bg: #0b0f12;
+  --panel: #151b20;
+  --line: #27313a;
+  --text: #e6edf2;
+  --muted: #8d9ba6;
+  --accent: #52c9f4;
+}
+* { box-sizing: border-box; }
+body {
+  width: 380px;
+  margin: 0;
+  padding: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+}
+h1 { margin: 0 0 10px; font-size: 14px; color: var(--accent); }
+ul { margin: 0; padding: 0; list-style: none; max-height: 340px; overflow-y: auto; }
+li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  margin-bottom: 6px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.info { flex: 1; min-width: 0; }
+.name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.meta { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+button {
+  flex: none;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button.play, form button { background: var(--accent); border-color: var(--accent); color: #05212c; font-weight: 600; }
+#empty { margin: 4px 0 12px; color: var(--muted); }
+form { display: flex; gap: 8px; margin-top: 6px; }
+input {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+}
+input:focus { outline: none; border-color: var(--accent); }

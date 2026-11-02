@@ -1,0 +1,113 @@
+{
+  "extDescription": {
+    "message": "偵測網頁載入的影片（HLS、MP4 等），點一下就能直接播放。V-AX (v-ax.com)"
+  },
+  "emptyList": {
+    "message": "這個分頁還沒偵測到影片。先讓影片開始播放，或重新整理頁面。"
+  },
+  "pastePlaceholder": {
+    "message": "或貼上影片網址（m3u8、mp4）"
+  },
+  "pasteLabel": {
+    "message": "影片網址"
+  },
+  "play": {
+    "message": "播放"
+  },
+  "copy": {
+    "message": "複製"
+  },
+  "copied": {
+    "message": "已複製"
+  },
+  "live": {
+    "message": "直播"
+  },
+  "qualitiesUpTo": {
+    "message": "$1 種畫質，最高 $2p"
+  },
+  "qualities": {
+    "message": "$1 種畫質"
+  },
+  "fileWithSize": {
+    "message": "$1，$2"
+  },
+  "quality": {
+    "message": "畫質"
+  },
+  "speed": {
+    "message": "速度"
+  },
+  "copyUrl": {
+    "message": "複製網址"
+  },
+  "auto": {
+    "message": "自動"
+  },
+  "autoLevel": {
+    "message": "自動（$1）"
+  },
+  "retry": {
+    "message": "重試"
+  },
+  "errRefusedTitle": {
+    "message": "網站拒絕播放這支影片（HTTP $1）"
+  },
+  "errRefusedDetail": {
+    "message": "連結可能已過期，或網站限定要從原頁面觀看。回原頁面重新整理，再從清單開一次。"
+  },
+  "errExpiredTitle": {
+    "message": "連結已過期（HTTP 410）"
+  },
+  "errExpiredDetail": {
+    "message": "這個網站的影片連結有效時間很短。回原頁面重新整理，等影片開始播放後馬上從清單開啟。"
+  },
+  "errNotFoundTitle": {
+    "message": "找不到影片（HTTP 404）"
+  },
+  "errNotFoundDetail": {
+    "message": "連結可能已過期或影片已被移除。"
+  },
+  "errServerTitle": {
+    "message": "伺服器回傳錯誤（HTTP $1）"
+  },
+  "errServerDetail": {
+    "message": "可以稍後再試一次。"
+  },
+  "errOfflineTitle": {
+    "message": "連不上影片伺服器"
+  },
+  "errOfflineDetail": {
+    "message": "請確認網路連線；網站也可能擋下了這個請求。"
+  },
+  "errDrmTitle": {
+    "message": "無法取得影片金鑰"
+  },
+  "errDrmDetail": {
+    "message": "這支影片可能受 DRM 保護，這個播放器無法播放受保護的內容。"
+  },
+  "errPlayTitle": {
+    "message": "影片無法播放"
+  },
+  "errDecodeDetail": {
+    "message": "瀏覽器無法解碼這支影片。"
+  },
+  "errFileDetail": {
+    "message": "連結可能已過期、網站拒絕存取，或瀏覽器不支援這個格式。回原頁面重新整理後再試一次。"
+  },
+  "errUrlTitle": {
+    "message": "網址不正確"
+  },
+  "errUrlDetail": {
+    "message": "請確認這是 http 或 https 開頭的影片網址。"
+  },
+  "errBrowserTitle": {
+    "message": "瀏覽器不支援"
+  },
+  "errBrowserDetail": {
+    "message": "這個瀏覽器無法播放 HLS 影片。"
+  },
+  "errRulesDetail": {
+    "message": "播放器無法設定這支影片的保護規則，所以沒有開始播放。請再試一次。"
+  }
+}

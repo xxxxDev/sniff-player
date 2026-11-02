@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Sniff Player</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <h1>Sniff Player</h1>
+  <ul id="list"></ul>
+  <p id="empty" data-i18n="emptyList" hidden></p>
+  <form id="manual">
+    <input id="manual-url" type="url" data-i18n-placeholder="pastePlaceholder" data-i18n-aria-label="pasteLabel" required>
+    <button type="submit" data-i18n="play"></button>
+  </form>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
