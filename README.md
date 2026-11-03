@@ -69,7 +69,7 @@ In the player: <kbd>Space</kbd> or <kbd>K</kbd> plays and pauses, <kbd>←</kbd>
 
 ## Privacy and permissions
 
-Sniff Player has no server and no analytics, and it sends nothing to its authors. The list of detected URLs stays in the browser's session storage and is gone when you close the browser. A video you play is a normal tab, so its URL can stay in your browser history. It needs access to all sites because it has to see what any page loads. [SECURITY.md](SECURITY.md) explains each permission and what the extension sends to the sites you visit.
+Sniff Player has no server and no analytics, and it sends nothing to its authors. The list of detected URLs stays in the browser's session storage and is gone when you close the browser. A video you play is a normal tab, so its URL can stay in your browser history. It needs access to all sites because it has to see what any page loads. The full [privacy policy](PRIVACY.md) is in this repository. [SECURITY.md](SECURITY.md) explains each permission and what the extension sends to the sites you visit.
 
 ## Third-party
 
