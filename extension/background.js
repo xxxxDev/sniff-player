@@ -217,7 +217,8 @@ async function inspectOne(tabId, entry) {
 
 // Playing in the page, when the setting is on. A found video takes the place of the site's player
 // in the frame that loaded it, built into that page so that it makes the page's own requests. One
-// swap per tab at a time. A frame where the person went back to the site's player is left alone
+// swap per tab at a time: the next video started takes over from the last. A frame where the
+// person went back to the site's player is left alone
 // until it navigates. Kept in storage.session, because this worker can stop at any time.
 const SETTING = 'playInPage';
 const swapKey = (tabId) => `swap:${tabId}`;
@@ -237,7 +238,7 @@ async function maybeEmbed(tabId, frameId, found) {
   claimed.add(tabId);
   try {
     const state = await swapState(tabId);
-    if (state.frameId !== null || state.declined.includes(frameId)) return;
+    if (state.declined.includes(frameId)) return;
     const tab = await chrome.tabs.get(tabId).catch(() => null);
     if (!tab || !/^https?:/.test(tab.url || '')) return;
     await chrome.scripting.executeScript({
@@ -249,7 +250,12 @@ async function maybeEmbed(tabId, frameId, found) {
       sniff: true, type: 'embed', url: found.url, kind: found.kind, title: tab.title,
       fillOnPlay: fillOnPlay === true, unfillOnEnd: unfillOnEnd === true,
     }, { frameId });
-    if (result?.ok) await chrome.storage.session.set({ [swapKey(tabId)]: { ...state, frameId } });
+    if (!result?.ok) return;
+    // One swap per tab: a video started in another frame takes over from the last one.
+    if (state.frameId !== null && state.frameId !== frameId) {
+      await chrome.tabs.sendMessage(tabId, { sniff: true, type: 'release' }, { frameId: state.frameId }).catch(() => {});
+    }
+    await chrome.storage.session.set({ [swapKey(tabId)]: { ...state, frameId } });
   } catch {
     // The frame is gone, or the browser doesn't let extensions run on it.
   } finally {

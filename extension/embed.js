@@ -237,18 +237,25 @@
     }, 1000);
   }
 
-  function restore(time, silent = false) {
+  // Back to the site's player. When another video takes over (handOver), the old one stays
+  // paused at the point reached, and the worker isn't told, since this frame isn't declining.
+  function restore(time, silent = false, handOver = false) {
     const state = current;
     if (!state) return;
     current = null;
     clearInterval(state.watchdog);
     if (filled === state.host) unfillHere();
+    const reached = state.ui.video.currentTime;
     state.hls?.destroy();
     state.ui.video.pause();
     state.ui.video.removeAttribute('src');
     state.host.remove();
     state.player.removeAttribute('data-sniff-hidden');
     state.video.removeEventListener('play', keepPaused);
+    if (handOver) {
+      if (Number.isFinite(reached) && reached > 0) state.video.currentTime = reached;
+      return;
+    }
     if (!silent) {
       if (Number.isFinite(time) && time > 0) state.video.currentTime = time;
       state.video.play().catch(() => {});
@@ -349,9 +356,11 @@
 
   async function findAndSwap({ url, kind, title, fillOnPlay, unfillOnEnd }) {
     for (let tries = 0; tries < FIND_TRIES; tries += 1) {
-      if (current) return { ok: false };
       const video = findVideo(url);
+      if (video && current && (video === current.video || url === current.url)) return { ok: false };
       if (video) {
+        // Another video on the page started, the next episode say: it takes over from the last.
+        if (current) restore(null, true, true);
         swap(video, url, kind, title, { fillOnPlay: fillOnPlay === true, unfillOnEnd: unfillOnEnd === true });
         return { ok: true };
       }
@@ -365,6 +374,11 @@
     if (message.type === 'embed') {
       findAndSwap(message).then(sendResponse, (error) => sendResponse({ ok: false, error: String(error) }));
       return true;
+    }
+    if (message.type === 'release') {
+      // A video in another frame of this tab takes over.
+      restore(null, true, true);
+      return false;
     }
     if (message.type === 'vouch') {
       vouched.add(message.token);
