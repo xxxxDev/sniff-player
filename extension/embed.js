@@ -175,7 +175,7 @@
     event.target.pause();
   }
 
-  function swap(video, url, kind, pageTitle) {
+  function swap(video, url, kind, pageTitle, { fillOnPlay = false, unfillOnEnd = false } = {}) {
     const player = playerOf(video);
     const box = player.getBoundingClientRect();
     const parentBox = player.parentElement?.getBoundingClientRect();
@@ -211,6 +211,7 @@
       onFill: (on) => (on ? fillHere(host) : unfillHere()),
       onBack: (time) => restore(time),
       onRetry: () => play(state),
+      unfillOnEnd,
     });
     // The site's video is only paused, not muted; Sniff Player starts with the same sound setting.
     state.ui.video.muted = muted;
@@ -223,6 +224,12 @@
     current = state;
     play(state);
     host.focus({ preventScroll: true });
+    // Only after a real press on the site's player, so that a video starting by itself, an ad's
+    // say, never takes over the window.
+    if (fillOnPlay && navigator.userActivation?.isActive) {
+      state.ui.setFilled(true);
+      fillHere(host);
+    }
 
     // A site that rebuilds its player removes ours with it, or the hidden one.
     state.watchdog = setInterval(() => {
@@ -340,12 +347,12 @@
     else unfill();
   }, true);
 
-  async function findAndSwap({ url, kind, title }) {
+  async function findAndSwap({ url, kind, title, fillOnPlay, unfillOnEnd }) {
     for (let tries = 0; tries < FIND_TRIES; tries += 1) {
       if (current) return { ok: false };
       const video = findVideo(url);
       if (video) {
-        swap(video, url, kind, title);
+        swap(video, url, kind, title, { fillOnPlay: fillOnPlay === true, unfillOnEnd: unfillOnEnd === true });
         return { ok: true };
       }
       await new Promise((resolve) => { setTimeout(resolve, FIND_INTERVAL_MS); });

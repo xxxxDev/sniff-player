@@ -151,5 +151,11 @@
   },
   "tapToUnmute": {
     "message": "Click to turn the sound on"
+  },
+  "fillOnPlay": {
+    "message": "Fill the page when you press play"
+  },
+  "unfillOnEnd": {
+    "message": "Leave the filled page when the video ends"
   }
 }

@@ -151,5 +151,11 @@
   },
   "tapToUnmute": {
     "message": "點一下開啟聲音"
+  },
+  "fillOnPlay": {
+    "message": "按播放時自動網頁全螢幕"
+  },
+  "unfillOnEnd": {
+    "message": "播完自動退出網頁全螢幕"
   }
 }

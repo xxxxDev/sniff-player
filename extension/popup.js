@@ -84,6 +84,18 @@ document.getElementById('manual').addEventListener('submit', (event) => {
 });
 
 // Off unless the person turns it on. It runs a script in a page only once a video is found there.
-const setting = document.getElementById('play-in-page');
-setting.checked = (await chrome.storage.local.get('playInPage')).playInPage === true;
-setting.addEventListener('change', () => chrome.storage.local.set({ playInPage: setting.checked }));
+// The two below it apply only to a player in the page, so they wait until it is on.
+const settings = { playInPage: 'play-in-page', fillOnPlay: 'fill-on-play', unfillOnEnd: 'unfill-on-end' };
+const stored = await chrome.storage.local.get(Object.keys(settings));
+const box = (name) => document.getElementById(settings[name]);
+const showEnabled = () => {
+  for (const name of ['fillOnPlay', 'unfillOnEnd']) box(name).disabled = !box('playInPage').checked;
+};
+for (const name of Object.keys(settings)) {
+  box(name).checked = stored[name] === true;
+  box(name).addEventListener('change', () => {
+    chrome.storage.local.set({ [name]: box(name).checked });
+    showEnabled();
+  });
+}
+showEnabled();

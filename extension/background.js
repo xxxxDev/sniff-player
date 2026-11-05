@@ -244,8 +244,11 @@ async function maybeEmbed(tabId, frameId, found) {
       target: { tabId, frameIds: [frameId] },
       files: ['vendor/hls.min.js', 'ui.js', 'embed.js'],
     });
-    const result = await chrome.tabs.sendMessage(tabId,
-      { sniff: true, type: 'embed', url: found.url, kind: found.kind, title: tab.title }, { frameId });
+    const { fillOnPlay, unfillOnEnd } = await chrome.storage.local.get(['fillOnPlay', 'unfillOnEnd']);
+    const result = await chrome.tabs.sendMessage(tabId, {
+      sniff: true, type: 'embed', url: found.url, kind: found.kind, title: tab.title,
+      fillOnPlay: fillOnPlay === true, unfillOnEnd: unfillOnEnd === true,
+    }, { frameId });
     if (result?.ok) await chrome.storage.session.set({ [swapKey(tabId)]: { ...state, frameId } });
   } catch {
     // The frame is gone, or the browser doesn't let extensions run on it.

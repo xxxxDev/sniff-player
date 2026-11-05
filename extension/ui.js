@@ -151,7 +151,7 @@ globalThis.SniffPlayerUI = (() => {
    * keyTarget gets the keyboard; fullscreenTarget goes full screen. onFill(on) and onBack(time)
    * are for a player in a page; without them their buttons stay hidden.
    */
-  function create({ root, t, title, src, keyTarget, fullscreenTarget, onFill, onBack, onRetry, isTab = false }) {
+  function create({ root, t, title, src, keyTarget, fullscreenTarget, onFill, onBack, onRetry, unfillOnEnd = false, isTab = false }) {
     const sheet = new CSSStyleSheet();
     sheet.replaceSync(CSS);
     // Where the list of choices sits, above its button. Kept in the sheet rather than inline,
@@ -300,6 +300,8 @@ globalThis.SniffPlayerUI = (() => {
     }
     fillButton.hidden = !onFill;
     fillButton.addEventListener('click', toggleFill);
+    // When the setting is on, the page comes back once the video ends.
+    video.addEventListener('ended', () => { if (filled && unfillOnEnd) toggleFill(); });
     showFill();
 
     // Speed and quality each open a short list of choices above the controls.
