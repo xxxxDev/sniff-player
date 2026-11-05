@@ -175,7 +175,10 @@
     event.target.pause();
   }
 
-  function swap(video, url, kind, pageTitle, { fillOnPlay = false, unfillOnEnd = false } = {}) {
+  function swap(video, url, kind, pageTitle, options = {}) {
+    const { fillOnPlay = false, unfillOnEnd = false } = options;
+    video.removeEventListener('play', swapAgain);
+    handedBack.delete(video);
     const player = playerOf(video);
     const box = player.getBoundingClientRect();
     const parentBox = player.parentElement?.getBoundingClientRect();
@@ -200,7 +203,7 @@
 
     // With one video the page's title names it. With several, its post's heading tells them apart.
     const heading = allVideos().filter(bigEnough).length > 1 ? headingOf(player) : '';
-    const state = { video, player, host, url, kind, startAt, ui: null, hls: null };
+    const state = { video, player, host, url, kind, startAt, pageTitle, options, ui: null, hls: null };
     state.ui = SniffPlayerUI.create({
       root,
       t,
@@ -237,6 +240,19 @@
     }, 1000);
   }
 
+  // Videos handed back to the site when another took over, each with how it was swapped.
+  const handedBack = new Map();
+  function swapAgain(event) {
+    const video = event.target;
+    const last = handedBack.get(video);
+    video.removeEventListener('play', swapAgain);
+    handedBack.delete(video);
+    if (!last || !alive() || !video.isConnected || current?.video === video) return;
+    if (current) restore(null, true, true);
+    swap(video, last.url, last.kind, last.pageTitle, last.options);
+    tellWorker({ type: 'swapped' });
+  }
+
   // Back to the site's player. When another video takes over (handOver), the old one stays
   // paused at the point reached, and the worker isn't told, since this frame isn't declining.
   function restore(time, silent = false, handOver = false) {
@@ -254,8 +270,14 @@
     state.video.removeEventListener('play', keepPaused);
     if (handOver) {
       if (Number.isFinite(reached) && reached > 0) state.video.currentTime = reached;
+      // Going back to it, the last episode say, swaps it in again.
+      handedBack.set(state.video, state);
+      state.video.addEventListener('play', swapAgain);
       return;
     }
+    // Back to the site's player for good, in this frame: none of them swaps in again.
+    for (const video of handedBack.keys()) video.removeEventListener('play', swapAgain);
+    handedBack.clear();
     if (!silent) {
       if (Number.isFinite(time) && time > 0) state.video.currentTime = time;
       state.video.play().catch(() => {});

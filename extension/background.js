@@ -283,6 +283,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (state.frameId !== sender.frameId) return;
       chrome.storage.session.set({ [swapKey(tabId)]: { frameId: null, declined: [...state.declined, sender.frameId] } });
     });
+  } else if (message.type === 'swapped') {
+    // A frame swapped a video in again by itself: one it had handed back, played once more.
+    swapState(tabId).then(async (state) => {
+      if (state.declined.includes(sender.frameId)) return;
+      if (state.frameId !== null && state.frameId !== sender.frameId) {
+        await chrome.tabs.sendMessage(tabId, { sniff: true, type: 'release' }, { frameId: state.frameId }).catch(() => {});
+      }
+      await chrome.storage.session.set({ [swapKey(tabId)]: { ...state, frameId: sender.frameId } });
+    });
   } else if (message.type === 'prepareFill') {
     swapState(tabId).then(async (state) => {
       if (state.frameId !== sender.frameId) return sendResponse(false);
