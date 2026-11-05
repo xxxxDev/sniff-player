@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Sniff Player",
-  "version": "2026.11.2",
+  "version": "2026.11.5",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "minimum_chrome_version": "116",
@@ -10,7 +10,8 @@
     "webRequest",
     "webNavigation",
     "storage",
-    "declarativeNetRequestWithHostAccess"
+    "declarativeNetRequestWithHostAccess",
+    "scripting"
   ],
   "host_permissions": ["<all_urls>"],
   "background": {

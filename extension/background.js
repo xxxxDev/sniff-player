@@ -47,7 +47,7 @@ async function showCount(tabId, entries) {
 const seenByTab = new Map();
 const MAX_SEEN_PER_TAB = 500;
 
-async function record(tabId, found) {
+async function record(tabId, found, frameId = null) {
   const seen = seenByTab.get(tabId) || new Map();
   seenByTab.set(tabId, seen);
   if (seen.has(found.url)) {
@@ -62,6 +62,7 @@ async function record(tabId, found) {
     return [...entries, found].slice(-MAX_ENTRIES);
   });
   if (added && found.kind !== 'file') inspect(tabId, found);
+  if (added && frameId !== null) maybeEmbed(tabId, frameId, found);
 }
 
 // A request from a page's service worker has no tab, so match it back by origin. With several
@@ -106,7 +107,7 @@ chrome.webRequest.onHeadersReceived.addListener(
       ...(file && { kind: 'file', ...file }),
     };
     if (details.tabId >= 0) {
-      record(details.tabId, found);
+      record(details.tabId, found, details.frameId);
     } else {
       tabForInitiator(details.initiator).then((tabId) => {
         if (tabId !== null) record(tabId, found);
@@ -214,10 +215,95 @@ async function inspectOne(tabId, entry) {
   )));
 }
 
+// Playing in the page, when the setting is on. A found video takes the place of the site's player
+// in the frame that loaded it, built into that page so that it makes the page's own requests. One
+// swap per tab at a time. A frame where the person went back to the site's player is left alone
+// until it navigates. Kept in storage.session, because this worker can stop at any time.
+const SETTING = 'playInPage';
+const swapKey = (tabId) => `swap:${tabId}`;
+const claimed = new Set(); // Tabs with a swap starting, before storage has caught up.
+
+async function playInPageOn() {
+  return (await chrome.storage.local.get(SETTING))[SETTING] === true;
+}
+
+async function swapState(tabId) {
+  return (await chrome.storage.session.get(swapKey(tabId)))[swapKey(tabId)] || { frameId: null, declined: [] };
+}
+
+async function maybeEmbed(tabId, frameId, found) {
+  if (claimed.has(tabId) || !(await playInPageOn()) || claimed.has(tabId)) return;
+  // Taken before anything else waits, so that the playlists of one video make one swap.
+  claimed.add(tabId);
+  try {
+    const state = await swapState(tabId);
+    if (state.frameId !== null || state.declined.includes(frameId)) return;
+    const tab = await chrome.tabs.get(tabId).catch(() => null);
+    if (!tab || !/^https?:/.test(tab.url || '')) return;
+    await chrome.scripting.executeScript({
+      target: { tabId, frameIds: [frameId] },
+      files: ['vendor/hls.min.js', 'ui.js', 'embed.js'],
+    });
+    const result = await chrome.tabs.sendMessage(tabId,
+      { sniff: true, type: 'embed', url: found.url, kind: found.kind, title: tab.title }, { frameId });
+    if (result?.ok) await chrome.storage.session.set({ [swapKey(tabId)]: { ...state, frameId } });
+  } catch {
+    // The frame is gone, or the browser doesn't let extensions run on it.
+  } finally {
+    claimed.delete(tabId);
+  }
+}
+
+// The frames between a frame and the top, which need the script too to fill the window.
+async function ancestorsOf(tabId, frameId) {
+  const frames = await chrome.webNavigation.getAllFrames({ tabId }) || [];
+  const byId = new Map(frames.map((frame) => [frame.frameId, frame]));
+  const ids = [];
+  for (let id = byId.get(frameId)?.parentFrameId; id !== undefined && id >= 0; id = byId.get(id)?.parentFrameId) {
+    ids.push(id);
+  }
+  return ids;
+}
+
+// Only the extension's own scripts in its tabs' frames can send these: pages can't.
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (!message?.sniff || !sender.tab || sender.id !== chrome.runtime.id) return false;
+  const tabId = sender.tab.id;
+  if (message.type === 'restored') {
+    swapState(tabId).then((state) => {
+      if (state.frameId !== sender.frameId) return;
+      chrome.storage.session.set({ [swapKey(tabId)]: { frameId: null, declined: [...state.declined, sender.frameId] } });
+    });
+  } else if (message.type === 'prepareFill') {
+    swapState(tabId).then(async (state) => {
+      if (state.frameId !== sender.frameId) return sendResponse(false);
+      const ancestors = await ancestorsOf(tabId, sender.frameId).catch(() => []);
+      if (ancestors.length) {
+        await chrome.scripting.executeScript({ target: { tabId, frameIds: ancestors }, files: ['embed.js'] }).catch(() => {});
+      }
+      sendResponse(true);
+    });
+    return true;
+  } else if (message.type === 'vouch') {
+    // Frames reach each other only through here, where a page can't write.
+    chrome.tabs.sendMessage(tabId, { sniff: true, type: 'vouch', token: message.token }).catch(() => {});
+  }
+  return false;
+});
+
 // Only a real navigation empties the list, not a route change in a single-page site. URLs newer
 // than the navigation stay, so a late event can't wipe what the new page has already loaded.
 chrome.webNavigation.onCommitted.addListener((details) => {
-  if (details.frameId !== 0 || details.documentLifecycle === 'prerender') return;
+  if (details.documentLifecycle === 'prerender') return;
+  swapState(details.tabId).then((state) => {
+    if (details.frameId === 0) return chrome.storage.session.remove(swapKey(details.tabId));
+    if (state.frameId !== details.frameId && !state.declined.includes(details.frameId)) return null;
+    return chrome.storage.session.set({ [swapKey(details.tabId)]: {
+      frameId: state.frameId === details.frameId ? null : state.frameId,
+      declined: state.declined.filter((id) => id !== details.frameId),
+    } });
+  });
+  if (details.frameId !== 0) return;
   const seen = seenByTab.get(details.tabId);
   seenByTab.delete(details.tabId);
   updateTab(details.tabId, (entries) => entries.filter((entry) => (
@@ -226,6 +312,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {
+  chrome.storage.session.remove(swapKey(tabId));
   pending.delete(tabId);
   seenByTab.delete(tabId);
   // Through the same queue, so a write in progress can't put the data back after the removal.

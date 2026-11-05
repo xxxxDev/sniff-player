@@ -109,5 +109,47 @@
   },
   "errRulesDetail": {
     "message": "播放器無法設定這支影片的保護規則，所以沒有開始播放。請再試一次。"
+  },
+  "pause": {
+    "message": "暫停"
+  },
+  "mute": {
+    "message": "靜音"
+  },
+  "unmute": {
+    "message": "取消靜音"
+  },
+  "fullscreen": {
+    "message": "全螢幕"
+  },
+  "exitFullscreen": {
+    "message": "結束全螢幕"
+  },
+  "fillPage": {
+    "message": "網頁全螢幕"
+  },
+  "exitFillPage": {
+    "message": "結束網頁全螢幕"
+  },
+  "pictureInPicture": {
+    "message": "子母畫面"
+  },
+  "sitePlayer": {
+    "message": "改用網站的播放器"
+  },
+  "seek": {
+    "message": "播放進度"
+  },
+  "volume": {
+    "message": "音量"
+  },
+  "playInPage": {
+    "message": "直接在網頁中播放（試驗）"
+  },
+  "playInPageHint": {
+    "message": "影片開始播放時，Sniff Player 會取代網頁上原本的播放器。"
+  },
+  "tapToUnmute": {
+    "message": "點一下開啟聲音"
   }
 }

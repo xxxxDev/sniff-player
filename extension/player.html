@@ -6,27 +6,8 @@
   <link rel="stylesheet" href="player.css">
 </head>
 <body>
-  <video id="video" controls></video>
-  <header id="bar">
-    <span id="title"></span>
-    <label id="quality-box" hidden><span data-i18n="quality"></span> <select id="quality"></select></label>
-    <label><span data-i18n="speed"></span>
-      <select id="speed">
-        <option value="0.5">0.5x</option>
-        <option value="1" selected>1x</option>
-        <option value="1.25">1.25x</option>
-        <option value="1.5">1.5x</option>
-        <option value="2">2x</option>
-      </select>
-    </label>
-    <button id="copy" type="button" data-i18n="copyUrl"></button>
-  </header>
-  <section id="error" hidden role="alert">
-    <h2 id="error-title"></h2>
-    <p id="error-detail"></p>
-    <button id="retry" type="button" data-i18n="retry"></button>
-  </section>
   <script src="vendor/hls.min.js"></script>
+  <script src="ui.js"></script>
   <script type="module" src="player.js"></script>
 </body>
 </html>

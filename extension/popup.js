@@ -82,3 +82,8 @@ document.getElementById('manual').addEventListener('submit', (event) => {
   event.preventDefault();
   play({ url: document.getElementById('manual-url').value.trim() });
 });
+
+// Off unless the person turns it on. It runs a script in a page only once a video is found there.
+const setting = document.getElementById('play-in-page');
+setting.checked = (await chrome.storage.local.get('playInPage')).playInPage === true;
+setting.addEventListener('change', () => chrome.storage.local.set({ playInPage: setting.checked }));

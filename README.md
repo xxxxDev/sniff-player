@@ -34,6 +34,7 @@ For every feature in detail, see [docs/FEATURES.md](docs/FEATURES.md).
 - **One row per video.** The qualities of one video are folded into a single row, with its length or a Live tag.
 - **A player with quality and speed controls.** Keyboard shortcuts included, and a clear message when a video can't play.
 - **Paste a URL.** Play any m3u8 or video file link directly.
+- **Play in the page (experimental).** Off by default. When it's on, Sniff Player takes the place of the site's player, with a button to fill the page.
 - **English and Traditional Chinese.** It follows your browser's language.
 
 ## Install
@@ -66,10 +67,11 @@ In the player: <kbd>Space</kbd> or <kbd>K</kbd> plays and pauses, <kbd>←</kbd>
 - **Video files under 5 MB are left out.** They are usually ads or intros.
 - **Segments aren't listed.** An MP4 that a streaming site fetches piece by piece from script can't be played alone. DASH (mpd) isn't supported yet.
 - **Not available in Incognito windows.** This keeps private browsing apart from your normal sign-ins.
+- **Play in the page is experimental.** A site that rebuilds its player can take the place back, and a page of several videos is matched by the one you start.
 
 ## Privacy and permissions
 
-Sniff Player has no server and no analytics, and it sends nothing to its authors. The list of detected URLs stays in the browser's session storage and is gone when you close the browser. A video you play is a normal tab, so its URL can stay in your browser history. It needs access to all sites because it has to see what any page loads. The full [privacy policy](PRIVACY.md) is in this repository. [SECURITY.md](SECURITY.md) explains each permission and what the extension sends to the sites you visit.
+Sniff Player has no server and no analytics, and it sends nothing to its authors. The list of detected URLs stays in the browser's session storage and is gone when you close the browser. A video you play is a normal tab, so its URL can stay in your browser history. It needs access to all sites because it has to see what any page loads. With Play in the page on, it also puts a script into a page where a video was found, to swap the player there; that player's requests are the page's own. The full [privacy policy](PRIVACY.md) is in this repository and at [v-ax.com](https://v-ax.com/privacy/sniff-player/). [SECURITY.md](SECURITY.md) explains each permission and what the extension sends to the sites you visit.
 
 ## Third-party
 

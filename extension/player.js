@@ -1,62 +1,27 @@
-import { localizePage, t } from './lib/i18n.js';
-import { displayName, levelLabel, refererHeaders } from './lib/media.js';
+import { t } from './lib/i18n.js';
+import { displayName, refererHeaders } from './lib/media.js';
 
-localizePage();
-
+// The player tab. What to play comes in its address, from the extension's own list. Pages can't
+// open this page or frame it.
 const params = new URLSearchParams(location.search);
-const src = params.get('src') || '';
+const src = window === window.top ? params.get('src') || '' : '';
 const referer = params.get('ref');
-const pageTitle = params.get('title');
+const kind = params.get('kind');
 
-const video = document.getElementById('video');
-const qualityBox = document.getElementById('quality-box');
-const quality = document.getElementById('quality');
-const AUTO = '-1';
-
-const name = pageTitle || displayName(src);
+document.documentElement.lang = chrome.i18n.getUILanguage();
+const name = params.get('title') || displayName(src);
 document.title = name;
-const titleElement = document.getElementById('title');
-titleElement.textContent = name;
-titleElement.title = src;
-
-function showError(title, detail) {
-  document.getElementById('error-title').textContent = title;
-  document.getElementById('error-detail').textContent = detail;
-  document.getElementById('error').hidden = false;
-  document.body.classList.remove('idle');
-}
-
-function networkMessage(code) {
-  if (code === 401 || code === 403) return [t('errRefusedTitle', code), t('errRefusedDetail')];
-  if (code === 410) return [t('errExpiredTitle'), t('errExpiredDetail')];
-  if (code === 404) return [t('errNotFoundTitle'), t('errNotFoundDetail')];
-  if (code) return [t('errServerTitle', code), t('errServerDetail')];
-  return [t('errOfflineTitle'), t('errOfflineDetail')];
-}
-
-function setupQuality(hls) {
-  if (hls.levels.length < 2) return;
-  const options = hls.levels
-    .map((level, index) => ({
-      index,
-      label: levelLabel({ height: level.height, frameRate: Number(level.attrs?.['FRAME-RATE']), bitrate: level.bitrate }),
-      height: level.height || 0,
-      bitrate: level.bitrate,
-    }))
-    .sort((a, b) => b.height - a.height || b.bitrate - a.bitrate)
-    .map(({ index, label }) => new Option(label, index));
-  quality.replaceChildren(new Option(t('auto'), AUTO), ...options);
-  qualityBox.hidden = false;
-  quality.addEventListener('change', () => {
-    hls.currentLevel = Number(quality.value);
-  });
-  hls.on(Hls.Events.LEVEL_SWITCHED, (_event, { level }) => {
-    const current = hls.levels[level];
-    quality.options[0].textContent = current?.height
-      ? t('autoLevel', levelLabel({ height: current.height, frameRate: Number(current.attrs?.['FRAME-RATE']), bitrate: current.bitrate }))
-      : t('auto');
-  });
-}
+const ui = SniffPlayerUI.create({
+  root: document.body,
+  t,
+  title: name,
+  src,
+  keyTarget: document,
+  fullscreenTarget: document.documentElement,
+  onRetry: () => location.reload(),
+  isTab: true,
+});
+const { video, showError } = ui;
 
 const MAX_REFERER_HOSTS = 10;
 const refererHosts = new Set();
@@ -80,8 +45,8 @@ function startHls(startPosition = -1) {
   let mediaRecoveries = 0;
   let restarting = false;
   hls.on(Hls.Events.MANIFEST_PARSED, () => {
-    setupQuality(hls);
-    video.play().catch(() => {});
+    SniffPlayerUI.offerQualities(ui, hls);
+    ui.startPlaying();
   });
   hls.on(Hls.Events.ERROR, async (_event, data) => {
     if (restarting) return;
@@ -96,7 +61,7 @@ function startHls(startPosition = -1) {
         startHls(position);
       } catch (error) {
         console.warn('Sniff Player: could not set the request rules', error);
-        showError(...networkMessage(data.response.code));
+        showError(...SniffPlayerUI.networkMessage(t, data.response.code));
       }
       return;
     }
@@ -108,13 +73,7 @@ function startHls(startPosition = -1) {
     }
     hls.destroy();
     console.warn('Sniff Player', data.type, data.details);
-    if (data.type === Hls.ErrorTypes.KEY_SYSTEM_ERROR || /^key/i.test(data.details)) {
-      showError(t('errDrmTitle'), t('errDrmDetail'));
-    } else if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-      showError(...networkMessage(data.response?.code));
-    } else {
-      showError(t('errPlayTitle'), data.details || t('errDecodeDetail'));
-    }
+    showError(...SniffPlayerUI.hlsErrorMessage(t, data));
   });
   hls.loadSource(src);
   hls.attachMedia(video);
@@ -142,16 +101,16 @@ function startDirect() {
     showError(t('errPlayTitle'), t('errFileDetail'));
   });
   video.src = src;
-  video.play().catch(() => {});
+  ui.startPlaying();
 }
 
 // The request rules of this player tab. They match only requests from the extension itself, so
 // they stop applying when the tab later moves on to another site.
 async function applyRequestRules() {
-  const tab = await chrome.tabs.getCurrent();
-  if (!tab) return;
+  const tabId = (await chrome.tabs.getCurrent())?.id;
+  if (tabId === undefined) throw new Error('no tab'); // Without rules, don't play.
   const condition = {
-    tabIds: [tab.id],
+    tabIds: [tabId],
     initiatorDomains: [chrome.runtime.id],
     resourceTypes: ['xmlhttprequest', 'media'],
   };
@@ -186,53 +145,10 @@ async function applyRequestRules() {
   }
   const existing = await chrome.declarativeNetRequest.getSessionRules();
   await chrome.declarativeNetRequest.updateSessionRules({
-    removeRuleIds: existing.filter((rule) => rule.condition.tabIds?.includes(tab.id)).map((rule) => rule.id),
+    removeRuleIds: existing.filter((rule) => rule.condition.tabIds?.includes(tabId)).map((rule) => rule.id),
     addRules,
   });
 }
-
-document.getElementById('speed').addEventListener('change', (event) => {
-  video.playbackRate = Number(event.target.value);
-  video.defaultPlaybackRate = video.playbackRate;
-});
-document.getElementById('retry').addEventListener('click', () => location.reload());
-const copyButton = document.getElementById('copy');
-copyButton.addEventListener('click', async () => {
-  await navigator.clipboard.writeText(src);
-  copyButton.textContent = t('copied');
-  setTimeout(() => { copyButton.textContent = t('copyUrl'); }, 1200);
-});
-
-// Hide the toolbar while the video plays and the mouse is still.
-let idleTimer;
-function wake() {
-  document.body.classList.remove('idle');
-  clearTimeout(idleTimer);
-  idleTimer = setTimeout(() => {
-    if (!video.paused && document.getElementById('error').hidden) {
-      document.body.classList.add('idle');
-    }
-  }, 2500);
-}
-document.addEventListener('mousemove', wake);
-video.addEventListener('pause', wake);
-wake();
-
-document.addEventListener('keydown', (event) => {
-  if (event.target.closest('select, button') || event.metaKey || event.ctrlKey || event.altKey) return;
-  const actions = {
-    ' ': () => (video.paused ? video.play().catch(() => {}) : video.pause()),
-    k: () => (video.paused ? video.play().catch(() => {}) : video.pause()),
-    ArrowLeft: () => { video.currentTime -= 5; },
-    ArrowRight: () => { video.currentTime += 5; },
-    m: () => { video.muted = !video.muted; },
-    f: () => (document.fullscreenElement ? document.exitFullscreen() : video.requestFullscreen()),
-  };
-  const action = actions[event.key.length === 1 ? event.key.toLowerCase() : event.key];
-  if (!action) return;
-  event.preventDefault();
-  action();
-});
 
 let valid = false;
 try {
@@ -253,7 +169,7 @@ if (!valid) {
     showError(t('errPlayTitle'), t('errRulesDetail'));
   }
   if (protectedRequests) {
-    if (params.get('kind') === 'file') startDirect();
+    if (kind === 'file') startDirect();
     else if (Hls.isSupported()) startHls();
     else if (video.canPlayType('application/vnd.apple.mpegurl')) startDirect();
     else showError(t('errBrowserTitle'), t('errBrowserDetail'));

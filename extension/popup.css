@@ -55,3 +55,6 @@ input {
   font: inherit;
 }
 input:focus { outline: none; border-color: var(--accent); }
+#setting { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); cursor: pointer; }
+#setting input { flex: none; margin: 2px 0 0; accent-color: var(--accent); }
+#setting small { display: block; color: var(--muted); font-size: 12px; }

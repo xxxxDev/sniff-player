@@ -109,5 +109,47 @@
   },
   "errRulesDetail": {
     "message": "The player couldn't set up its protections for this video, so it didn't start. Try again."
+  },
+  "pause": {
+    "message": "Pause"
+  },
+  "mute": {
+    "message": "Mute"
+  },
+  "unmute": {
+    "message": "Unmute"
+  },
+  "fullscreen": {
+    "message": "Full screen"
+  },
+  "exitFullscreen": {
+    "message": "Exit full screen"
+  },
+  "fillPage": {
+    "message": "Fill the page"
+  },
+  "exitFillPage": {
+    "message": "Exit fill page"
+  },
+  "pictureInPicture": {
+    "message": "Picture-in-picture"
+  },
+  "sitePlayer": {
+    "message": "Use the site's player"
+  },
+  "seek": {
+    "message": "Seek"
+  },
+  "volume": {
+    "message": "Volume"
+  },
+  "playInPage": {
+    "message": "Play in the page (experimental)"
+  },
+  "playInPageHint": {
+    "message": "When a video starts, Sniff Player takes the site player's place on the page."
+  },
+  "tapToUnmute": {
+    "message": "Click to turn the sound on"
   }
 }

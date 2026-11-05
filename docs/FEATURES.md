@@ -24,15 +24,25 @@ Sometimes rows don't fold together: a site can answer each read of a playlist wi
 
 ## The player
 
-- **Quality.** Auto, or any quality in the stream. Auto shows which one is playing.
+- **Quality.** Auto, or any quality in the stream, when it has more than one. Auto shows which one is playing.
 - **Speed.** 0.5x to 2x.
 - **Copy URL.** The URL of the video that's open.
-- **Keyboard.** <kbd>Space</kbd> or <kbd>K</kbd> plays and pauses, <kbd>←</kbd> <kbd>→</kbd> skip 5 seconds, <kbd>M</kbd> mutes, <kbd>F</kbd> goes full screen.
-- **A toolbar that gets out of the way.** It hides while the video plays and the mouse is still.
+- **Controls.** Play and pause, a seek bar with the time, quality, speed, copy URL, picture-in-picture, volume and full screen, all on the bar.
+- **Keyboard.** <kbd>Space</kbd> or <kbd>K</kbd> plays and pauses, <kbd>←</kbd> <kbd>→</kbd> skip 5 seconds, <kbd>↑</kbd> <kbd>↓</kbd> change the volume, <kbd>M</kbd> mutes, <kbd>F</kbd> goes full screen.
+- **Controls that get out of the way.** They hide while the video plays and the mouse is still.
 
 <p align="center">
   <img src="../.github/assets/screens/player-en.png" alt="The player with its quality and speed controls">
 </p>
+
+## Play in the page (experimental)
+
+Off by default. Turn it on with the checkbox at the bottom of the list. When a video starts on a page, Sniff Player pauses the site's player and takes its place, at the same size, from the same point of the video.
+
+- **The right video on a page of several.** A video file is matched by its URL. A stream is matched to the video you just started: of those playing, the largest.
+- **Fill the page.** The button between volume and full screen makes the player fill the browser window, with the rest of the page out of the way. Press it again, or <kbd>Esc</kbd> or <kbd>W</kbd>, to go back.
+- **Back to the site's player.** A button on the bar, at the point you reached. Sniff Player then leaves that frame alone until it goes to another page.
+- **When it does nothing.** The script that swaps the player runs in a page only once a video is found there. Some sites rebuild their player, and Sniff Player then gives the place back to the site.
 
 ## When a video can't play
 
