@@ -41,6 +41,7 @@ Off by default. Turn it on with the checkbox at the bottom of the list. When a v
 
 - **The right video on a page of several.** A video file is matched by its URL. A stream is matched to the video you just started: of those playing, the largest.
 - **The next one takes over.** Start another video on the page, the next episode say, and Sniff Player moves there. The last one goes back to the site's player, paused at the point you reached, and playing it again brings Sniff Player back to it.
+- **Short clips stay with the site.** A clip under a minute, a site's intro or an ad say, plays on in the site's player, with anything the site asks first, such as an age check. Sniff Player takes over when the episode starts.
 - **Fill the page.** The button between volume and full screen makes the player fill the browser window, with the rest of the page out of the way. Press it again, or <kbd>Esc</kbd> or <kbd>W</kbd>, to go back.
 - **Fill the page on its own.** Two options under the setting, both off by default: fill the page when you press play on the site's player, and leave it when the video ends. A video that starts by itself, without your press, doesn't fill the page.
 - **Back to the site's player.** A button on the bar, at the point you reached. Sniff Player then leaves that frame alone until it goes to another page.

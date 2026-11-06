@@ -14,7 +14,9 @@
   const SAME_SIZE_SLACK = 15;
   const MIN_WIDTH = 200;
   const MIN_HEIGHT = 112;
-  const FIND_TRIES = 12;
+  const FIND_TRIES = 24;
+  // A site's intro or an ad before the episode is left to the site, with whatever it asks first.
+  const MIN_SWAP_SECONDS = 60;
   const FIND_INTERVAL_MS = 500;
   const FRAME_TAG = 'sniff-player-frame';
   // After the extension is updated or reloaded, this copy of the script is cut off from it, and
@@ -228,6 +230,10 @@
     player.before(host);
     player.setAttribute('data-sniff-hidden', '');
     current = state;
+    // A clip that turns out short, a site's intro say, goes back to the site to play on as it was.
+    state.ui.video.addEventListener('loadedmetadata', () => {
+      if (current === state && state.ui.video.duration < MIN_SWAP_SECONDS) giveBack(state);
+    }, { once: true });
     play(state);
     host.focus({ preventScroll: true });
     // Only after a real press on the site's player, so that a video starting by itself, an ad's
@@ -254,6 +260,13 @@
     if (current) restore(null, true, true);
     swap(video, last.url, last.kind, last.pageTitle, last.options);
     tellWorker({ type: 'swapped' });
+  }
+
+  function giveBack(state) {
+    restore(null, true, true);
+    state.video.removeEventListener('play', swapAgain);
+    handedBack.delete(state.video);
+    state.video.play().catch(() => {});
   }
 
   // Back to the site's player. When another video takes over (handOver), the old one stays
@@ -383,6 +396,11 @@
     for (let tries = 0; tries < FIND_TRIES; tries += 1) {
       const video = findVideo(url);
       if (video && current && (video === current.video || url === current.url)) return { ok: false };
+      // Its length may not be known yet, or still be the clip's before it, so look again.
+      if (video && !(video.duration >= MIN_SWAP_SECONDS)) {
+        await new Promise((resolve) => { setTimeout(resolve, FIND_INTERVAL_MS); });
+        continue;
+      }
       if (video) {
         // Another video on the page started, the next episode say: it takes over from the last.
         if (current) restore(null, true, true);
