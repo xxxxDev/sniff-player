@@ -72,7 +72,9 @@ function startHls(startPosition = -1) {
       return;
     }
     hls.destroy();
-    console.warn('Sniff Player', data.type, data.details);
+    // A host's answer (an expired link's 410, a 404) is the site's, shown in the player only; it
+    // isn't an error of the extension's.
+    if (!data.response?.code) console.warn('Sniff Player', data.type, data.details);
     showError(...SniffPlayerUI.hlsErrorMessage(t, data));
   });
   hls.loadSource(src);
