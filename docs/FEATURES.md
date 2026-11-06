@@ -46,6 +46,10 @@ Off by default. Turn it on with the checkbox at the bottom of the list. When a v
 - **Back to the site's player.** A button on the bar, at the point you reached. Sniff Player then leaves that frame alone until it goes to another page.
 - **When it does nothing.** The script that swaps the player runs in a page only once a video is found there. Some sites rebuild their player, and Sniff Player then gives the place back to the site.
 
+<p align="center">
+  <img src="../.github/assets/screens/inpage-en.png" alt="Sniff Player playing a video on a made-up site, in the place of the site's own player">
+</p>
+
 ## When a video can't play
 
 The player says why, in place of a black screen, and offers a retry.

@@ -29,6 +29,9 @@
     }
   };
 
+  // crypto.randomUUID exists only on HTTPS pages; getRandomValues works on plain HTTP too.
+  const randomId = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
+
   // Attributes rather than classes, because sites rewrite the class lists of their own players.
   const sheet = new CSSStyleSheet();
   sheet.replaceSync(`
@@ -188,7 +191,7 @@
     video.addEventListener('play', keepPaused);
 
     const host = document.createElement('div');
-    const id = crypto.randomUUID();
+    const id = randomId();
     host.setAttribute('data-sniff-player', id);
     host.tabIndex = -1;
     // In the constructed sheet rather than inline, which a page's style-src policy can block.
@@ -338,7 +341,7 @@
   // in both channels: the worker vouches for it, and postMessage shows the frame.
   function askParent(kind) {
     if (!inFrame) return;
-    const token = crypto.randomUUID();
+    const token = randomId();
     tellWorker({ type: 'vouch', token });
     window.parent.postMessage({ tag: FRAME_TAG, kind, token }, '*');
   }
