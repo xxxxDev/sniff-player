@@ -39,7 +39,9 @@ For every feature in detail, see [docs/FEATURES.md](docs/FEATURES.md).
 
 ## Install
 
-Sniff Player isn't on the Chrome Web Store, so you load it yourself:
+Install it from the [Chrome Web Store](https://chromewebstore.google.com/detail/dlibpccmiokdbmkjneblkfhfmenhidkj).
+
+A new version reaches the store after its review, so the latest release here can be ahead of it. To use that one, load it yourself:
 
 1. Download the zip from the [latest release](https://github.com/xxxxDev/sniff-player/releases/latest) and unzip it, or clone this repository.
 2. Open `chrome://extensions` and turn on **Developer mode**.

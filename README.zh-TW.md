@@ -39,7 +39,9 @@
 
 ## 安裝
 
-Sniff Player 沒有上架 Chrome 線上商店，需要自己載入：
+從 [Chrome 線上應用程式商店](https://chromewebstore.google.com/detail/dlibpccmiokdbmkjneblkfhfmenhidkj)安裝。
+
+新版要等商店審查通過才會上架，所以這裡的最新版本可能比商店新。想用最新版本，可以自己載入：
 
 1. 從[最新版本](https://github.com/xxxxDev/sniff-player/releases/latest)下載 zip 並解壓縮，或 clone 這個 repo。
 2. 開啟 `chrome://extensions`，打開**開發人員模式**。
