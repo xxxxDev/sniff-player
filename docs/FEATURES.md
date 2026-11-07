@@ -40,13 +40,18 @@ Sometimes rows don't fold together: a site can answer each read of a playlist wi
 Move the pointer onto a video and three buttons show above its top right corner. They work with the setting below off.
 
 - **Picture-in-picture.** Or press <kbd>F3</kbd>.
-- **Fill the window.** The video, with the site's own player and its controls, fills the browser window and the rest of the page steps aside. Press <kbd>F2</kbd> to do the same, and <kbd>F2</kbd> or <kbd>Esc</kbd> to go back.
+- **Fill the page.** The video, with the site's own player and its controls, fills the browser window and the rest of the page steps aside. Press <kbd>F2</kbd> to do the same, and <kbd>F2</kbd> or <kbd>Esc</kbd> to go back.
 - **Sniff Player.** Plays that video right there in Sniff Player, as Play in the page does, from the same point. Start the video first: Sniff Player plays what the page has loaded.
+
+<p align="center">
+  <img src="../.github/assets/screens/buttons-en.png" alt="A video on a made-up site, with the Picture-in-picture, Fill the page and Sniff Player buttons above its top right corner">
+</p>
 
 ## Play in the page (experimental)
 
 Off by default. Turn it on with the checkbox at the bottom of the list. When a video starts on a page, Sniff Player pauses the site's player and takes its place, at the same size, from the same point of the video.
 
+- **Sound as the site had it.** Sniff Player starts at full volume, muted if the site's player was muted, and its sound button or volume bar turns the sound on.
 - **The right video on a page of several.** A video file is matched by its URL. A stream is matched to the video you just started: of those playing, the largest.
 - **The next one takes over.** Start another video on the page, the next episode say, and Sniff Player moves there. The last one goes back to the site's player, paused at the point you reached, and playing it again brings Sniff Player back to it.
 - **Short clips stay with the site.** A clip under a minute, a site's intro or an ad say, plays on in the site's player, with anything the site asks first, such as an age check. Sniff Player takes over when the episode starts.
