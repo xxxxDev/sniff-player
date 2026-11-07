@@ -35,6 +35,14 @@ Sometimes rows don't fold together: a site can answer each read of a playlist wi
   <img src="../.github/assets/screens/player-en.png" alt="The player with its quality and speed controls">
 </p>
 
+## Buttons on videos
+
+Move the pointer onto a video and three buttons show above its top right corner. They work with the setting below off.
+
+- **Picture-in-picture.** Or press <kbd>F3</kbd>.
+- **Fill the window.** The video, with the site's own player and its controls, fills the browser window and the rest of the page steps aside. Press <kbd>F2</kbd> to do the same, and <kbd>F2</kbd> or <kbd>Esc</kbd> to go back.
+- **Sniff Player.** Plays that video right there in Sniff Player, as Play in the page does, from the same point. Start the video first: Sniff Player plays what the page has loaded.
+
 ## Play in the page (experimental)
 
 Off by default. Turn it on with the checkbox at the bottom of the list. When a video starts on a page, Sniff Player pauses the site's player and takes its place, at the same size, from the same point of the video.

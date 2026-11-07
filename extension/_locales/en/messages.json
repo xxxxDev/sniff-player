@@ -157,5 +157,14 @@
   },
   "unfillOnEnd": {
     "message": "Leave the filled page when the video ends"
+  },
+  "pipNeedsClick": {
+    "message": "Click the video first, then try again."
+  },
+  "sniffNeedsPlay": {
+    "message": "Start the video first, then press Sniff Player again."
+  },
+  "sniffBlocked": {
+    "message": "Sniff Player can't play in this page."
   }
 }

@@ -157,5 +157,14 @@
   },
   "unfillOnEnd": {
     "message": "播完自動退出網頁全螢幕"
+  },
+  "pipNeedsClick": {
+    "message": "請先點一下影片，再試一次。"
+  },
+  "sniffNeedsPlay": {
+    "message": "請先播放影片，再按一次 Sniff Player。"
+  },
+  "sniffBlocked": {
+    "message": "這個網頁無法使用 Sniff Player 播放。"
   }
 }

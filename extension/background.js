@@ -52,6 +52,15 @@ async function record(tabId, found, frameId = null) {
   seenByTab.set(tabId, seen);
   if (seen.has(found.url)) {
     seen.set(found.url, found.time);
+    // The same video loaded again by another page in a frame: it's that page's now.
+    if (found.documentId) {
+      updateTab(tabId, (entries) => (
+        entries.some((entry) => entry.url === found.url && entry.documentId && entry.documentId !== found.documentId)
+          ? entries.map((entry) => (entry.url === found.url
+            ? { ...entry, frameId: found.frameId, documentId: found.documentId } : entry))
+          : entries
+      ));
+    }
     return;
   }
   if (seen.size < MAX_SEEN_PER_TAB) seen.set(found.url, found.time);
@@ -104,6 +113,9 @@ chrome.webRequest.onHeadersReceived.addListener(
       url: details.url,
       time: details.timeStamp,
       referer: hasPage ? `${details.initiator}/` : null,
+      // The page that loaded it, for the Sniff Player button on that page's video. The document
+      // counts, not the frame: a frame keeps its number when it moves on to another page.
+      ...(details.tabId >= 0 && { frameId: details.frameId, documentId: details.documentId }),
       ...(file && { kind: 'file', ...file }),
     };
     if (details.tabId >= 0) {
@@ -263,6 +275,44 @@ async function maybeEmbed(tabId, frameId, found) {
   }
 }
 
+// The Sniff Player button on a video: what that page loaded, newest first, with the person's
+// press standing in for the setting. A video playing from a file names its URL; a stream plays
+// through a blob, so it's what the page (or, from a service worker, its origin) loaded last.
+async function swapHere(tabId, sender, src) {
+  // A swap starting on its own holds the tab for a few seconds; wait for it rather than fail.
+  for (let waited = 0; claimed.has(tabId) && waited < 15000; waited += 200) {
+    await new Promise((resolve) => { setTimeout(resolve, 200); });
+  }
+  if (claimed.has(tabId)) return { ok: false, reason: 'blocked' };
+  claimed.add(tabId);
+  try {
+    const tab = await chrome.tabs.get(tabId).catch(() => null);
+    if (!tab || !/^https?:/.test(tab.url || '')) return { ok: false, reason: 'blocked' };
+    const key = tabKey(tabId);
+    const fromPage = groupEntries((await chrome.storage.session.get(key))[key] || [])
+      .filter((entry) => (entry.documentId
+        ? entry.documentId === sender.documentId
+        : entry.frameId === undefined && entry.referer === `${sender.origin}/`))
+      .sort((a, b) => b.time - a.time);
+    const bare = (url) => url.split('#')[0];
+    const found = (src && fromPage.find((entry) => bare(entry.url) === bare(src))) || fromPage[0];
+    if (!found) return { ok: false };
+    await chrome.scripting.executeScript({
+      target: { tabId, frameIds: [sender.frameId] },
+      files: ['vendor/hls.min.js', 'ui.js', 'embed.js'],
+    });
+    const { fillOnPlay, unfillOnEnd } = await chrome.storage.local.get(['fillOnPlay', 'unfillOnEnd']);
+    return {
+      ok: true, url: found.url, kind: found.kind, title: tab.title,
+      fillOnPlay: fillOnPlay === true, unfillOnEnd: unfillOnEnd === true,
+    };
+  } catch {
+    return { ok: false, reason: 'blocked' };
+  } finally {
+    claimed.delete(tabId);
+  }
+}
+
 // The frames between a frame and the top, which need the script too to fill the window.
 async function ancestorsOf(tabId, frameId) {
   const frames = await chrome.webNavigation.getAllFrames({ tabId }) || [];
@@ -278,6 +328,28 @@ async function ancestorsOf(tabId, frameId) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!message?.sniff || !sender.tab || sender.id !== chrome.runtime.id) return false;
   const tabId = sender.tab.id;
+  if (message.buttons) {
+    // The buttons' scripts in the tab's frames reach each other only through here.
+    chrome.tabs.sendMessage(tabId, message).catch(() => {});
+    return false;
+  }
+  if (message.type === 'swapHere') {
+    swapHere(tabId, sender, typeof message.src === 'string' ? message.src : '').then(sendResponse);
+    return true;
+  }
+  if (message.type === 'pressedSwap') {
+    // The person pressed Sniff Player on a video in this frame, and it has swapped: it becomes the
+    // tab's swap, even in a frame where they had gone back to the site's player.
+    swapState(tabId).then(async (state) => {
+      if (state.frameId !== null && state.frameId !== sender.frameId) {
+        await chrome.tabs.sendMessage(tabId, { sniff: true, type: 'release' }, { frameId: state.frameId }).catch(() => {});
+      }
+      await chrome.storage.session.set({ [swapKey(tabId)]: {
+        frameId: sender.frameId, declined: state.declined.filter((id) => id !== sender.frameId),
+      } });
+    });
+    return false;
+  }
   if (message.type === 'restored') {
     swapState(tabId).then((state) => {
       if (state.frameId !== sender.frameId) return;

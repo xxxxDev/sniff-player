@@ -181,7 +181,7 @@
   }
 
   function swap(video, url, kind, pageTitle, options = {}) {
-    const { fillOnPlay = false, unfillOnEnd = false } = options;
+    const { fillOnPlay = false, unfillOnEnd = false, pressed = false } = options;
     video.removeEventListener('play', swapAgain);
     handedBack.delete(video);
     const player = playerOf(video);
@@ -220,9 +220,9 @@
       onBack: (time) => restore(time),
       onRetry: () => play(state),
       unfillOnEnd,
+      // The site's video is only paused, not muted; Sniff Player starts with the same sound setting.
+      muted,
     });
-    // The site's video is only paused, not muted; Sniff Player starts with the same sound setting.
-    state.ui.video.muted = muted;
     host.addEventListener('pointerdown', () => host.focus({ preventScroll: true }));
 
     addSheet(document);
@@ -231,9 +231,12 @@
     player.setAttribute('data-sniff-hidden', '');
     current = state;
     // A clip that turns out short, a site's intro say, goes back to the site to play on as it was.
-    state.ui.video.addEventListener('loadedmetadata', () => {
-      if (current === state && state.ui.video.duration < MIN_SWAP_SECONDS) giveBack(state);
-    }, { once: true });
+    // Not one the person asked for with the Sniff Player button.
+    if (!pressed) {
+      state.ui.video.addEventListener('loadedmetadata', () => {
+        if (current === state && state.ui.video.duration < MIN_SWAP_SECONDS) giveBack(state);
+      }, { once: true });
+    }
     play(state);
     host.focus({ preventScroll: true });
     // Only after a real press on the site's player, so that a video starting by itself, an ad's
@@ -412,8 +415,18 @@
     return { ok: false };
   }
 
+  // The Sniff Player button on a video, from buttons.js in this same isolated world, which a page
+  // can't reach. The worker has already picked what to play and taken this frame as the tab's swap.
+  globalThis.__sniffPlayerSwapVideo = (video, { url, kind, title, fillOnPlay, unfillOnEnd }) => {
+    if (!video.isConnected || current?.video === video) return false;
+    if (current) restore(null, true, true);
+    swap(video, url, kind, title, { fillOnPlay: fillOnPlay === true, unfillOnEnd: unfillOnEnd === true, pressed: true });
+    tellWorker({ type: 'pressedSwap' });
+    return true;
+  };
+
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    if (!message?.sniff) return false;
+    if (!message?.sniff || message.buttons) return false;
     if (message.type === 'embed') {
       findAndSwap(message).then(sendResponse, (error) => sendResponse({ ok: false, error: String(error) }));
       return true;

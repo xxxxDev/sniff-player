@@ -151,7 +151,7 @@ globalThis.SniffPlayerUI = (() => {
    * keyTarget gets the keyboard; fullscreenTarget goes full screen. onFill(on) and onBack(time)
    * are for a player in a page; without them their buttons stay hidden.
    */
-  function create({ root, t, title, src, keyTarget, fullscreenTarget, onFill, onBack, onRetry, unfillOnEnd = false, isTab = false }) {
+  function create({ root, t, title, src, keyTarget, fullscreenTarget, onFill, onBack, onRetry, unfillOnEnd = false, isTab = false, muted = false }) {
     const sheet = new CSSStyleSheet();
     sheet.replaceSync(CSS);
     // Where the list of choices sits, above its button. Kept in the sheet rather than inline,
@@ -258,6 +258,9 @@ globalThis.SniffPlayerUI = (() => {
       volume.value = String(video.muted ? 0 : video.volume);
     }
     video.addEventListener('volumechange', showVolume);
+    // Set before the controls first show it: a change on a video that isn't in the page yet can
+    // pass without a volumechange event, and the button would show sound on a muted video.
+    video.muted = muted;
     muteButton.addEventListener('click', () => {
       if (video.muted || video.volume === 0) {
         video.muted = false;
