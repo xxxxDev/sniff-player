@@ -2,7 +2,7 @@
 
 English · [繁體中文](#繁體中文)
 
-Effective date: 2026-11-07
+Effective date: 2026-11-09
 
 This policy covers the Sniff Player browser extension, published by V-AX.
 
@@ -39,7 +39,7 @@ If this policy changes, the new version will be published at this address with a
 
 ## 繁體中文
 
-生效日期：2026-11-07
+生效日期：2026-11-09
 
 本政策適用於 V-AX 發布的 Sniff Player 瀏覽器擴充工具。
 
