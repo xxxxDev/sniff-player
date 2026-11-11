@@ -99,3 +99,12 @@ for (const name of Object.keys(settings)) {
   });
 }
 showEnabled();
+
+// The buttons shown on a video under the pointer. All three show unless the person turns one off.
+const buttonBoxes = { buttonPip: 'button-pip', buttonFill: 'button-fill', buttonSniff: 'button-sniff' };
+const shown = await chrome.storage.local.get(Object.keys(buttonBoxes));
+for (const [name, id] of Object.entries(buttonBoxes)) {
+  const input = document.getElementById(id);
+  input.checked = shown[name] !== false;
+  input.addEventListener('change', () => chrome.storage.local.set({ [name]: input.checked }));
+}

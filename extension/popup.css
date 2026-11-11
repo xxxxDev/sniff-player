@@ -61,3 +61,8 @@ input:focus { outline: none; border-color: var(--accent); }
 .sub-setting { display: flex; gap: 8px; align-items: center; margin: 6px 0 0 24px; cursor: pointer; }
 .sub-setting input { flex: none; margin: 0; accent-color: var(--accent); }
 .sub-setting:has(input:disabled) { opacity: 0.5; cursor: default; }
+#video-buttons { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 12px 0 0; padding: 10px 0 0; border: 0; border-top: 1px solid var(--line); }
+#video-buttons legend { float: left; width: 100%; padding: 0; }
+#video-buttons small { display: block; color: var(--muted); font-size: 12px; }
+#video-buttons label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+#video-buttons input { flex: none; margin: 0; accent-color: var(--accent); }

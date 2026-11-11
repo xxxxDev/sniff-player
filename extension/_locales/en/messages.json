@@ -158,6 +158,12 @@
   "unfillOnEnd": {
     "message": "Leave the filled page when the video ends"
   },
+  "videoButtons": {
+    "message": "Buttons on videos"
+  },
+  "videoButtonsHint": {
+    "message": "Shown at a video's top right corner when the pointer is on it. F2 and F3 work either way."
+  },
   "pipNeedsClick": {
     "message": "Click the video first, then try again."
   },

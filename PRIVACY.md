@@ -16,7 +16,7 @@ This policy covers the Sniff Player browser extension, published by V-AX.
 
 ## Where it is kept
 
-The list of detected videos is kept in the browser's session storage. It isn't written to disk, and it's gone when you close the browser. The only other things stored are your settings, whether Play in the page and its two options are on, in the browser's local storage. A video you play opens in a normal tab, so its URL can stay in your browser history like any other page.
+The list of detected videos is kept in the browser's session storage. It isn't written to disk, and it's gone when you close the browser. The only other things stored are your settings, whether Play in the page and its two options are on and which buttons show on videos, in the browser's local storage. A video you play opens in a normal tab, so its URL can stay in your browser history like any other page.
 
 ## What is sent, and to whom
 
@@ -53,7 +53,7 @@ If this policy changes, the new version will be published at this address with a
 
 ### 存放位置
 
-偵測到的影片清單存在瀏覽器的工作階段儲存空間，不寫入磁碟，關閉瀏覽器就會消失。另外只會在瀏覽器的本機儲存空間記住你的設定，也就是「直接在網頁中播放」和它的兩個選項是否開啟。你播放的影片會開在一般分頁，所以網址可能和其他網頁一樣留在瀏覽紀錄裡。
+偵測到的影片清單存在瀏覽器的工作階段儲存空間，不寫入磁碟，關閉瀏覽器就會消失。另外只會在瀏覽器的本機儲存空間記住你的設定，也就是「直接在網頁中播放」和它的兩個選項是否開啟，以及影片上要顯示哪些按鈕。你播放的影片會開在一般分頁，所以網址可能和其他網頁一樣留在瀏覽紀錄裡。
 
 ### 傳送哪些資料、傳給誰
 

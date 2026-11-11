@@ -158,6 +158,12 @@
   "unfillOnEnd": {
     "message": "播完自動退出網頁全螢幕"
   },
+  "videoButtons": {
+    "message": "影片上的按鈕"
+  },
+  "videoButtonsHint": {
+    "message": "滑鼠移到影片上時顯示在右上角。F2、F3 不受影響。"
+  },
   "pipNeedsClick": {
     "message": "請先點一下影片，再試一次。"
   },

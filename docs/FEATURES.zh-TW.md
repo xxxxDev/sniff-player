@@ -43,6 +43,8 @@ Sniff Player 監看分頁的網路回應，不掃描網頁內容，所以網頁�
 - **網頁全螢幕。** 影片連同網站的播放器和控制列填滿瀏覽器視窗，網頁其他部分先讓開。也可以按 <kbd>F2</kbd>；按 <kbd>F2</kbd> 或 <kbd>Esc</kbd> 恢復。
 - **Sniff Player。** 直接在原位置改用 Sniff Player 播放，從同一個秒數接著播，跟「直接在網頁中播放」一樣。請先讓影片開始播放，Sniff Player 播的是網頁已經載入的影片。
 
+不想要的按鈕，可以在選單的「影片上的按鈕」取消勾選；三個都取消就不會出現。<kbd>F2</kbd>、<kbd>F3</kbd> 不受影響。
+
 <p align="center">
   <img src="../.github/assets/screens/buttons-zh-TW.png" alt="虛構網站上的影片，右上角有子母畫面、網頁全螢幕和 Sniff Player 三個按鈕">
 </p>

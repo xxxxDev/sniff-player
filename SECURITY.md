@@ -8,7 +8,7 @@ Sniff Player has no server and no analytics, and it sends nothing to its authors
 - **`webNavigation`.** To empty a tab's list when the tab goes to a new page.
 - **`storage`.** To keep the list. It uses session storage only: the list isn't written to disk, and it's gone when you close the browser.
 - **`declarativeNetRequestWithHostAccess`.** To set request headers for the player tab, as described below.
-- **A script in every page.** It shows the buttons on the video under the pointer and handles <kbd>F2</kbd>, <kbd>F3</kbd> and <kbd>Esc</kbd>. It reads the page's video elements and nothing else, keeps nothing and sends nothing. Its buttons are in a closed shadow root, and only real presses count.
+- **A script in every page.** It shows the buttons on the video under the pointer and handles <kbd>F2</kbd>, <kbd>F3</kbd> and <kbd>Esc</kbd>. It reads the page's video elements and nothing else, keeps nothing and sends nothing. Which buttons show is your choice in the popup. Its buttons are in a closed shadow root, and only real presses count.
 - **`scripting`.** For **Play in the page**, an experimental setting that is off unless you turn it on, and for the Sniff Player button on a video. When a video is found in a frame, or you press the button, the extension puts a script into that frame. The script finds the video that loaded it, reads the page's title and the heading near the video to name it, pauses the site's player and builds Sniff Player in its place. The setting itself is kept in the browser's local storage.
 
 ## What it sends to the sites you visit

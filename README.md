@@ -35,7 +35,7 @@ For every feature in detail, see [docs/FEATURES.md](docs/FEATURES.md).
 - **A player with quality and speed controls.** Keyboard shortcuts included, and a clear message when a video can't play.
 - **Paste a URL.** Play any m3u8 or video file link directly.
 - **Play in the page (experimental).** Off by default. When it's on, Sniff Player takes the place of the site's player, with a button to fill the page.
-- **Buttons on videos.** With the pointer on a video: picture-in-picture, fill the page, and Sniff Player, which plays it right there. <kbd>F2</kbd> and <kbd>F3</kbd> work too.
+- **Buttons on videos.** With the pointer on a video: picture-in-picture, fill the page, and Sniff Player, which plays it right there. <kbd>F2</kbd> and <kbd>F3</kbd> work too. Choose which buttons show in the popup.
 - **English and Traditional Chinese.** It follows your browser's language.
 
 ## Install

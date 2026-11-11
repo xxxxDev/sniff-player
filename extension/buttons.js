@@ -351,7 +351,9 @@
   // style sheet so a page's content security policy can't block them.
 
   let host = null;
-  let pipButton = null;
+  const buttons = {};
+  // Which of the three the person wants. Until the setting has been read, none show.
+  let wanted = null;
   let tip = null;
   let placed = null;
 
@@ -378,15 +380,22 @@
       root.append(button);
       return button;
     };
-    pipButton = addButton(t('pictureInPicture'), togglePictureInPicture);
-    addButton(t('fillPage'), fillVideo);
-    addButton('Sniff Player', playInSniffPlayer);
+    buttons.buttonPip = addButton(t('pictureInPicture'), togglePictureInPicture);
+    buttons.buttonFill = addButton(t('fillPage'), fillVideo);
+    buttons.buttonSniff = addButton('Sniff Player', playInSniffPlayer);
     document.documentElement.append(host);
   }
 
   function placeButtons(video) {
+    if (!wanted) return;
+    const pipAllowed = document.pictureInPictureEnabled && !video.disablePictureInPicture;
+    const showing = { buttonPip: wanted.buttonPip && pipAllowed, buttonFill: wanted.buttonFill, buttonSniff: wanted.buttonSniff };
+    if (!Object.values(showing).some(Boolean)) {
+      hideButtons();
+      return;
+    }
     if (!host) buildButtons();
-    pipButton.style.display = document.pictureInPictureEnabled && !video.disablePictureInPicture ? '' : 'none';
+    for (const [name, button] of Object.entries(buttons)) button.style.display = showing[name] ? '' : 'none';
     host.style.display = 'flex';
     const box = video.getBoundingClientRect();
     const size = host.getBoundingClientRect();
@@ -426,6 +435,22 @@
     if (!tip.matches(':popover-open')) showInTopLayer(tip);
     clearTimeout(tip.timer);
     tip.timer = setTimeout(() => tip.hidePopover(), 3500);
+  }
+
+  // The person's choice of buttons, from the popup. F2 and F3 work whichever are shown.
+  const BUTTON_SETTINGS = ['buttonPip', 'buttonFill', 'buttonSniff'];
+  function applyWanted(stored) {
+    wanted = Object.fromEntries(BUTTON_SETTINGS.map((name) => [name, stored[name] !== false]));
+    if (pointerVideo && pointerVideo.isConnected && !filled) placeButtons(pointerVideo);
+  }
+  try {
+    chrome.storage.local.get(BUTTON_SETTINGS).then(applyWanted, () => applyWanted({}));
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local' || !BUTTON_SETTINGS.some((name) => name in changes)) return;
+      chrome.storage.local.get(BUTTON_SETTINGS).then(applyWanted, () => {});
+    });
+  } catch {
+    applyWanted({});
   }
 
   // Following the pointer

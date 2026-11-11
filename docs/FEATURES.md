@@ -43,6 +43,8 @@ Move the pointer onto a video and three buttons show above its top right corner.
 - **Fill the page.** The video, with the site's own player and its controls, fills the browser window and the rest of the page steps aside. Press <kbd>F2</kbd> to do the same, and <kbd>F2</kbd> or <kbd>Esc</kbd> to go back.
 - **Sniff Player.** Plays that video right there in Sniff Player, as Play in the page does, from the same point. Start the video first: Sniff Player plays what the page has loaded.
 
+In the popup, under **Buttons on videos**, untick the ones you don't want; with all three off, none show. <kbd>F2</kbd> and <kbd>F3</kbd> work either way.
+
 <p align="center">
   <img src="../.github/assets/screens/buttons-en.png" alt="A video on a made-up site, with the Picture-in-picture, Fill the page and Sniff Player buttons above its top right corner">
 </p>
