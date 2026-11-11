@@ -149,7 +149,6 @@ async function runInspectQueue() {
   while (pending.size) {
     const [tabId, queue] = pending.entries().next().value;
     pending.delete(tabId);
-  seenByTab.delete(tabId);
     const entry = queue.shift();
     if (queue.length) pending.set(tabId, queue); // Go to the back, next tab's turn.
     await inspectOne(tabId, entry).catch(() => {});
