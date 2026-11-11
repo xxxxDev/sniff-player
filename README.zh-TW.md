@@ -50,7 +50,7 @@
 
 需要 Chrome 116 以上。
 
-## 使用
+## 使用方式
 
 1. 打開網頁並開始播放影片。很多網頁要按下播放才會開始載入。
 2. 點 Sniff Player 圖示，清單會列出找到的影片。
@@ -80,6 +80,14 @@ Sniff Player 沒有伺服器，也沒有使用分析，不會傳任何資料給�
 
 播放器使用 [hls.js](https://github.com/video-dev/hls.js) 1.7.3，採 Apache License 2.0。授權文字在 [extension/vendor](extension/vendor)。
 
+## 參與貢獻
+
+回報問題或提交修改的方式，請見 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
 ## 授權
 
-程式碼採 [MIT 授權](LICENSE)。圖示不在此授權內，請看 [BRAND.md](BRAND.md)。
+程式碼以 [MIT License](LICENSE) 釋出。圖示不在此授權內，見 [BRAND.md](BRAND.md)。
+
+Sniff Player 是獨立專案，並非由 Google 製作，也與其沒有關係或背書。Chrome 是 Google LLC 的商標。
+
+由 [V-AX](https://v-ax.com) 製作。

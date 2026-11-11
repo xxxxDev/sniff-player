@@ -80,6 +80,14 @@ Sniff Player has no server and no analytics, and it sends nothing to its authors
 
 The player is built on [hls.js](https://github.com/video-dev/hls.js) 1.7.3, under the Apache License 2.0. Its licenses are in [extension/vendor](extension/vendor).
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to report a bug or send a change.
+
 ## License
 
 The code is under the [MIT License](LICENSE). The icon isn't: see [BRAND.md](BRAND.md).
+
+Sniff Player is an independent project. It is not made by, affiliated with or endorsed by Google. Chrome is a trademark of Google LLC.
+
+Made by [V-AX](https://v-ax.com).
