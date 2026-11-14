@@ -39,8 +39,8 @@ Sometimes rows don't fold together: a site can answer each read of a playlist wi
 
 Move the pointer onto a video and three buttons show above its top right corner. They work with the setting below off.
 
-- **Picture-in-picture.** Or press <kbd>F3</kbd>.
-- **Fill the page.** The video, with the site's own player and its controls, fills the browser window and the rest of the page steps aside. Press <kbd>F2</kbd> to do the same, and <kbd>F2</kbd> or <kbd>Esc</kbd> to go back.
+- **Picture-in-picture.** Or press <kbd>F3</kbd>. When the site's player has its own picture-in-picture button, that one is pressed.
+- **Fill the page.** The video, with the site's own player and its controls, fills the browser window and the rest of the page steps aside. Press <kbd>F2</kbd> to do the same, and <kbd>F2</kbd> or <kbd>Esc</kbd> to go back. When the site's player has its own fill-the-page button, as ArtPlayer, DPlayer and xgplayer do, that one is pressed, and pressed again to go back.
 - **Sniff Player.** Plays that video right there in Sniff Player, as Play in the page does, from the same point. Start the video first: Sniff Player plays what the page has loaded.
 
 In the popup, under **Buttons on videos**, untick the ones you don't want; with all three off, none show. <kbd>F2</kbd> and <kbd>F3</kbd> work either way.
@@ -55,7 +55,7 @@ On by default. When you press play on a video in a page, Sniff Player pauses the
 
 - **Use Sniff Player when you press play.** On by default. It decides which player plays: Sniff Player, or with it off the site's own. A video that starts by itself, without your press, stays with the site; press play on it later and Sniff Player takes over.
 - **Play when the page loads.** Off by default. On a page with a single video, the video starts as the page loads, in Sniff Player or the site's player as set above.
-- **Fill the page when you press play** and **Leave the filled page when the video ends.** Off by default. They apply to whichever player plays. With Play when the page loads on as well, the video fills the page as soon as it starts. Any other video that starts by itself, an ad say, doesn't fill the page. When the site's player has its own fill-the-page button, as ArtPlayer, DPlayer and xgplayer do, that button is used, and pressed again to leave.
+- **Fill the page when you press play** and **Leave the filled page when the video ends.** Off by default. They apply to whichever player plays. With Play when the page loads on as well, the video fills the page as soon as it starts. Any other video that starts by itself, an ad say, doesn't fill the page. A site's player with its own fill-the-page button is filled with that button, as with Fill the page above.
 
 - **Sound as the site had it.** Sniff Player starts at full volume, muted if the site's player was muted, and its sound button or volume bar turns the sound on.
 - **The right video on a page of several.** A video file is matched by its URL. A stream is matched to the video you just started: of those playing, the largest.

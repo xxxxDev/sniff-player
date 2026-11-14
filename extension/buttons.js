@@ -162,12 +162,24 @@
   // xgplayer's cssfullscreen, and the labels and titles sites give such a button (in Chinese too,
   // escaped here).
   const SITE_FILL = /cssfullscreen|dplayer-full-in|fullscreen[-_\s]?web|web[-_\s]?full[-_\s]?screen|page[-_\s]?full[-_\s]?screen|\u7db2\u9801\u5168\u5c4f|\u7f51\u9875\u5168\u5c4f|\u7db2\u9801\u5168\u87a2\u5e55/i;
-  function siteFillControl(target) {
-    if (target.tagName === 'VIDEO') return null;
+  // And its picture-in-picture control: pip as a word of a class, the English name, or the Chinese.
+  const SITE_PIP = /(^|[-_\s])pip([-_\s]|$)|picture[-_\s]?in[-_\s]?picture|\u756b\u4e2d\u756b|\u753b\u4e2d\u753b|\u5b50\u6bcd\u756b\u9762/i;
+  // The first in the page's order, so the control itself rather than the icon in it. Not one the
+  // site hides: a player shows only the controls that work.
+  function siteControl(target, pattern) {
+    if (!target || target.tagName === 'VIDEO') return null;
     return [...target.querySelectorAll('[aria-label], [title], [class]')].find((element) => {
       const label = `${element.getAttribute('aria-label') || ''} ${element.getAttribute('title') || ''} ${element.getAttribute('class') || ''}`;
-      return SITE_FILL.test(label) && element.checkVisibility();
+      return pattern.test(label) && element.checkVisibility();
     }) || null;
+  }
+  const siteFillControl = (target) => siteControl(target, SITE_FILL);
+  const sitePipControl = (target) => siteControl(target, SITE_PIP);
+
+  // A site player filling the page its own way covers the window.
+  function coversWindow(element) {
+    const box = element.getBoundingClientRect();
+    return box.width >= window.innerWidth - 2 && box.height >= window.innerHeight - 2;
   }
 
   // Sheets reach only their own document or shadow root, and a video can sit in a shadow root.
@@ -288,8 +300,15 @@
     window.parent.postMessage({ tag: FRAME_TAG, kind: 'fill', token }, '*');
   }
 
+  // The Fill the page button, F2 and the settings: a player with its own control is filled, and left,
+  // by pressing that, as the site made it.
   function fillVideo(video) {
     if (document.fullscreenElement || filled) return;
+    const control = siteFillControl(playerOf(video));
+    if (control) {
+      control.click();
+      return;
+    }
     applyFill(playerOf(video), video);
     askParentToFill();
   }
@@ -336,6 +355,12 @@
   // Picture-in-picture
 
   async function togglePictureInPicture(video) {
+    // The site's own control, while the press that got here still counts.
+    const control = sitePipControl(playerOf(video));
+    if (control) {
+      control.click();
+      return;
+    }
     try {
       if (document.pictureInPictureElement) await document.exitPictureInPicture();
       else await video.requestPictureInPicture();
@@ -597,15 +622,8 @@
   }
   // Filling the page on its own, from the two settings: with the site's own control when its player
   // has one, pressed again to leave; otherwise as the Fill the page button does.
-  let siteFilled = null;
   function autoFill(video) {
-    if (filled || siteFilled || document.fullscreenElement) return;
-    const control = siteFillControl(playerOf(video));
-    if (control) {
-      control.click();
-      siteFilled = { video, control };
-      return;
-    }
+    if (filled || document.fullscreenElement || coversWindow(playerOf(video))) return;
     fillVideo(video);
   }
   const pressedPlay = new WeakSet();
@@ -616,13 +634,14 @@
     if (onPlay && !onPlay.swapOnPress && onPlay.fillOnPlay && isLargeEnough(video)) autoFill(video);
   }, true);
   document.addEventListener('ended', (event) => {
-    if (siteFilled?.video === event.target) {
-      const { control } = siteFilled;
-      siteFilled = null;
-      if (onPlay?.unfillOnEnd && control.isConnected) control.click();
+    if (!onPlay?.unfillOnEnd || !(event.target instanceof HTMLVideoElement)) return;
+    if (filled) {
+      if (filled.video === event.target) leaveEverywhere();
       return;
     }
-    if (onPlay?.unfillOnEnd && filled && filled.video === event.target) leaveEverywhere();
+    const player = playerOf(event.target);
+    const control = siteFillControl(player);
+    if (control && coversWindow(player)) control.click();
   }, true);
   globalThis.__sniffPlayerPressedPlay = (video) => pressedPlay.has(video);
 
