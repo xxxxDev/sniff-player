@@ -176,10 +176,12 @@
   const siteFillControl = (target) => siteControl(target, SITE_FILL);
   const sitePipControl = (target) => siteControl(target, SITE_PIP);
 
-  // A site player filling the page its own way covers the window.
+  // A site player filling the page its own way covers the window, short of a scroll bar.
   function coversWindow(element) {
     const box = element.getBoundingClientRect();
-    return box.width >= window.innerWidth - 2 && box.height >= window.innerHeight - 2;
+    const { clientWidth, clientHeight } = document.documentElement;
+    return box.width >= Math.min(window.innerWidth, clientWidth || Infinity) - 2
+      && box.height >= Math.min(window.innerHeight, clientHeight || Infinity) - 2;
   }
 
   // Sheets reach only their own document or shadow root, and a video can sit in a shadow root.
@@ -626,12 +628,23 @@
     if (filled || document.fullscreenElement || coversWindow(playerOf(video))) return;
     fillVideo(video);
   }
+  // Only the first press of play on a video, and a moment later: a double click, which many players
+  // take for full screen, starts and stops the video on the way, and then neither fills the page.
+  const AUTO_FILL_DELAY_MS = 400;
   const pressedPlay = new WeakSet();
+  let lastDoubleClick = -Infinity;
+  document.addEventListener('dblclick', (event) => { if (event.isTrusted) lastDoubleClick = Date.now(); }, true);
   document.addEventListener('play', (event) => {
     const video = event.target;
     if (!(video instanceof HTMLVideoElement) || !navigator.userActivation?.isActive) return;
+    const first = !pressedPlay.has(video);
     pressedPlay.add(video);
-    if (onPlay && !onPlay.swapOnPress && onPlay.fillOnPlay && isLargeEnough(video)) autoFill(video);
+    if (!first || !onPlay || onPlay.swapOnPress || !onPlay.fillOnPlay) return;
+    const pressedAt = Date.now();
+    setTimeout(() => {
+      if (video.paused || document.fullscreenElement || lastDoubleClick >= pressedAt || !isLargeEnough(video)) return;
+      autoFill(video);
+    }, AUTO_FILL_DELAY_MS);
   }, true);
   document.addEventListener('ended', (event) => {
     if (!onPlay?.unfillOnEnd || !(event.target instanceof HTMLVideoElement)) return;
