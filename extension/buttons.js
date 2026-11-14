@@ -80,8 +80,14 @@
   // A site's video can be in a shadow root, which document.querySelectorAll doesn't enter. The
   // ones on the pointer's path are enough, and much cheaper than walking the whole page. Sniff
   // Player's own video, in a closed shadow root, is never on it.
+  // Sniff Player playing in this frame, from embed.js in this same isolated world.
+  const embedded = () => globalThis.__sniffPlayerEmbedded?.() || null;
+  const isEmbedded = (video) => !!video && embedded()?.video === video;
+
   function candidateVideos(path) {
     const videos = new Set(document.querySelectorAll('video'));
+    const ours = embedded();
+    if (ours) videos.add(ours.video);
     for (const node of path) {
       const root = node.shadowRoot || (node instanceof ShadowRoot ? node : null);
       if (root) root.querySelectorAll('video').forEach((video) => videos.add(video));
@@ -305,6 +311,11 @@
   // The Fill the page button, F2 and the settings: a player with its own control is filled, and left,
   // by pressing that, as the site made it.
   function fillVideo(video) {
+    const ours = embedded();
+    if (ours && ours.video === video) {
+      ours.toggleFill();
+      return;
+    }
     if (document.fullscreenElement || filled) return;
     const control = siteFillControl(playerOf(video));
     if (control) {
@@ -358,7 +369,7 @@
 
   async function togglePictureInPicture(video) {
     // The site's own control, while the press that got here still counts.
-    const control = sitePipControl(playerOf(video));
+    const control = !isEmbedded(video) && sitePipControl(playerOf(video));
     if (control) {
       control.click();
       return;
@@ -433,7 +444,8 @@
   function placeButtons(video) {
     if (!wanted) return;
     const pipAllowed = document.pictureInPictureEnabled && !video.disablePictureInPicture;
-    const showing = { buttonPip: wanted.buttonPip && pipAllowed, buttonFill: wanted.buttonFill, buttonSniff: wanted.buttonSniff };
+    // On Sniff Player itself, the Sniff Player button has nothing to do.
+    const showing = { buttonPip: wanted.buttonPip && pipAllowed, buttonFill: wanted.buttonFill, buttonSniff: wanted.buttonSniff && !isEmbedded(video) };
     if (!Object.values(showing).some(Boolean)) {
       hideButtons();
       return;

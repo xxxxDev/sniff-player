@@ -458,6 +458,19 @@
 
   // The Sniff Player button on a video, from buttons.js in this same isolated world, which a page
   // can't reach. The worker has already picked what to play and taken this frame as the tab's swap.
+  // Sniff Player in this frame, for the buttons on videos: its video is in a closed shadow root, out
+  // of their sight, and Fill the page there is the player's own.
+  globalThis.__sniffPlayerEmbedded = () => (current ? {
+    video: current.ui.video,
+    toggleFill() {
+      if (!current) return;
+      const on = filled !== current.host;
+      current.ui.setFilled(on);
+      if (on) fillHere(current.host);
+      else unfillHere();
+    },
+  } : null);
+
   globalThis.__sniffPlayerSwapVideo = (video, { url, kind, title, fillOnPlay, unfillOnEnd }) => {
     if (!video.isConnected || current?.video === video) return false;
     if (current) restore(null, true, true);
