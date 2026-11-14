@@ -13,7 +13,7 @@
   const KEY_FILL = 'F2';
   const KEY_PIP = 'F3';
   // Players whose own controls should stay usable, even when they are larger than the video.
-  const PLAYER_SELECTOR = '#movie_player, .html5-video-player, .video-js, .jwplayer, .plyr, .dplayer';
+  const PLAYER_SELECTOR = '#movie_player, .html5-video-player, .video-js, .jwplayer, .plyr, .dplayer, .art-video-player, .xgplayer, .shaka-video-container';
   const FRAME_TAG = 'sniff-player-buttons';
   const FONT = '-apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif';
 
@@ -149,8 +149,24 @@
   }
 
   // A player with no controls of its own would leave the person with nothing to press.
+  // A known player has them, and so does one with buttons, sliders or icons around the video; adding
+  // the browser's on top would show two sets, and a click would go to both.
   function hasOwnControls(target, video) {
-    return target !== video && !!target.querySelector('button, input, [role="button"], [role="slider"]');
+    if (target === video) return false;
+    return target.matches(PLAYER_SELECTOR)
+      || !!target.querySelector('button, input, [role="button"], [role="slider"], svg, [aria-label]');
+  }
+
+  // A site player's own "fill the page" control, which keeps the player as the site made it. Found
+  // by what players call it rather than by player: ArtPlayer's fullscreenWeb, DPlayer's full-in,
+  // xgplayer's cssfullscreen, and the labels and titles sites give such a button.
+  const SITE_FILL = /cssfullscreen|dplayer-full-in|fullscreen[-_\s]?web|web[-_\s]?full[-_\s]?screen|page[-_\s]?full[-_\s]?screen|網頁全屏|网页全屏|網頁全螢幕|网页全屏幕/i;
+  function siteFillControl(target) {
+    if (target.tagName === 'VIDEO') return null;
+    return [...target.querySelectorAll('[aria-label], [title], [class]')].find((element) => {
+      const label = `${element.getAttribute('aria-label') || ''} ${element.getAttribute('title') || ''} ${element.getAttribute('class') || ''}`;
+      return SITE_FILL.test(label) && element.checkVisibility();
+    }) || null;
   }
 
   // Sheets reach only their own document or shadow root, and a video can sit in a shadow root.
@@ -578,14 +594,33 @@
   } catch {
     // Cut off from the extension: the defaults stand.
   }
+  // Filling the page on its own, from the two settings: with the site's own control when its player
+  // has one, pressed again to leave; otherwise as the Fill the page button does.
+  let siteFilled = null;
+  function autoFill(video) {
+    if (filled || siteFilled || document.fullscreenElement) return;
+    const control = siteFillControl(playerOf(video));
+    if (control) {
+      control.click();
+      siteFilled = { video, control };
+      return;
+    }
+    fillVideo(video);
+  }
   const pressedPlay = new WeakSet();
   document.addEventListener('play', (event) => {
     const video = event.target;
     if (!(video instanceof HTMLVideoElement) || !navigator.userActivation?.isActive) return;
     pressedPlay.add(video);
-    if (onPlay && !onPlay.swapOnPress && onPlay.fillOnPlay && !filled && isLargeEnough(video)) fillVideo(video);
+    if (onPlay && !onPlay.swapOnPress && onPlay.fillOnPlay && isLargeEnough(video)) autoFill(video);
   }, true);
   document.addEventListener('ended', (event) => {
+    if (siteFilled?.video === event.target) {
+      const { control } = siteFilled;
+      siteFilled = null;
+      if (onPlay?.unfillOnEnd && control.isConnected) control.click();
+      return;
+    }
     if (onPlay?.unfillOnEnd && filled && filled.video === event.target) leaveEverywhere();
   }, true);
   globalThis.__sniffPlayerPressedPlay = (video) => pressedPlay.has(video);
@@ -626,7 +661,7 @@
       }
       if (video.paused || !(video.duration >= LOAD_MIN_SECONDS)) return;
       clearInterval(timer);
-      if (!onPlay.swapOnPress && onPlay.fillOnPlay && !inFrame) fillVideo(video);
+      if (!onPlay.swapOnPress && onPlay.fillOnPlay && !inFrame) autoFill(video);
     }, LOAD_INTERVAL_MS);
   }
 
