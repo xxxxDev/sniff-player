@@ -298,10 +298,10 @@
     // Esc, or another frame leaving: a site's own fill in a frame goes with it, unless the site has
     // already left by itself (its player answering Esc too), which a second press would undo.
     if (siteFilled && inFrame) {
-      const { control, player, look } = siteFilled;
+      const { control, player, marks } = siteFilled;
       siteFilled = null;
       setTimeout(() => {
-        if (control.isConnected && (!look || lookOf(player) === look)) control.click();
+        if (control.isConnected && stillFilled(player, marks)) control.click();
       }, SITE_SETTLE_MS);
     }
   }
@@ -336,14 +336,18 @@
       // window; in a frame, whose player covers the frame either way, what this script last did.
       // In a frame the frames above fill as well, as with our own way, and leave with it.
       const on = inFrame ? siteFilled?.video === video : coversWindow(player);
+      const before = new Set(player.classList);
       control.click();
       if (on) {
         siteFilled = null;
         if (inFrame) leaveEverywhere();
       } else {
-        siteFilled = { video, control, player, look: '' };
-        // How the player looks once the site has filled it, to tell later whether it still is.
-        setTimeout(() => { if (siteFilled?.player === player) siteFilled.look = lookOf(player); }, SITE_SETTLE_MS);
+        siteFilled = { video, control, player, marks: null };
+        // What the site changed on its player to fill it, to tell later whether it still is.
+        setTimeout(() => {
+          if (siteFilled?.player !== player) return;
+          siteFilled.marks = { added: [...player.classList].filter((name) => !before.has(name)), style: player.getAttribute('style') };
+        }, SITE_SETTLE_MS);
         askParentToFill();
       }
       return;
@@ -354,7 +358,13 @@
   // The site's own fill, pressed by this script; the frames above may be filling for it.
   let siteFilled = null;
   const SITE_SETTLE_MS = 150;
-  const lookOf = (player) => `${player.getAttribute('class') || ''}|${player.getAttribute('style') || ''}`;
+  // The classes the site added when it filled are still there, or with no class added its inline
+  // style is unchanged. Classes a player adds and drops as the pointer moves don't count.
+  function stillFilled(player, marks) {
+    if (!marks) return true;
+    if (marks.added.length) return marks.added.every((name) => player.classList.contains(name));
+    return player.getAttribute('style') === marks.style;
+  }
 
   const vouchedTokens = new Set();
   let leaveCount = 0;
