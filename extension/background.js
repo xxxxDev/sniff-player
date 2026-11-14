@@ -261,10 +261,15 @@ async function pressedInFrame(tabId, frameId) {
   return result?.result === true;
 }
 
-async function maybeEmbed(tabId, frameId, found) {
-  if (claimed.has(tabId)) return;
+async function maybeEmbed(tabId, frameId, found, pressed = false) {
+  // A press arriving while another swap holds the tab keeps its video waiting for the next one.
+  const busy = () => {
+    if (pressed) waitingForPress.set(pressKey(tabId, frameId), found);
+  };
+  if (claimed.has(tabId)) return busy();
   const { onPress, onLoad } = await swapSettings();
-  if (!onPress || claimed.has(tabId)) return;
+  if (!onPress) return undefined;
+  if (claimed.has(tabId)) return busy();
   // Taken before anything else waits, so that the playlists of one video make one swap.
   claimed.add(tabId);
   try {
@@ -363,7 +368,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const found = waitingForPress.get(key);
     if (found) {
       waitingForPress.delete(key);
-      maybeEmbed(tabId, sender.frameId, found);
+      maybeEmbed(tabId, sender.frameId, found, true);
     }
     return false;
   }

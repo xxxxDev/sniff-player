@@ -295,11 +295,14 @@
 
   function leaveHere() {
     if (filled) clearFill();
-    // Esc, or another frame leaving: a site's own fill in a frame goes with it.
+    // Esc, or another frame leaving: a site's own fill in a frame goes with it, unless the site has
+    // already left by itself (its player answering Esc too), which a second press would undo.
     if (siteFilled && inFrame) {
-      const { control } = siteFilled;
+      const { control, player, look } = siteFilled;
       siteFilled = null;
-      if (control.isConnected) control.click();
+      setTimeout(() => {
+        if (control.isConnected && (!look || lookOf(player) === look)) control.click();
+      }, SITE_SETTLE_MS);
     }
   }
 
@@ -338,7 +341,9 @@
         siteFilled = null;
         if (inFrame) leaveEverywhere();
       } else {
-        siteFilled = { video, control };
+        siteFilled = { video, control, player, look: '' };
+        // How the player looks once the site has filled it, to tell later whether it still is.
+        setTimeout(() => { if (siteFilled?.player === player) siteFilled.look = lookOf(player); }, SITE_SETTLE_MS);
         askParentToFill();
       }
       return;
@@ -348,6 +353,8 @@
   }
   // The site's own fill, pressed by this script; the frames above may be filling for it.
   let siteFilled = null;
+  const SITE_SETTLE_MS = 150;
+  const lookOf = (player) => `${player.getAttribute('class') || ''}|${player.getAttribute('style') || ''}`;
 
   const vouchedTokens = new Set();
   let leaveCount = 0;
@@ -703,7 +710,11 @@
       if (filled.video === event.target) leaveEverywhere();
       return;
     }
-    if (siteFilled?.video === event.target) fillVideo(event.target);
+    // In the top page, only while the player still covers the window: the person may have left with
+    // the site's own button.
+    if (siteFilled?.video !== event.target) return;
+    if (inFrame || coversWindow(siteFilled.player)) fillVideo(event.target);
+    else siteFilled = null;
   }, true);
   globalThis.__sniffPlayerPressedPlay = (video) => pressedPlay.has(video);
 
