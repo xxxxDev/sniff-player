@@ -8,7 +8,7 @@
 }
 * { box-sizing: border-box; }
 body {
-  width: 380px;
+  width: 430px;
   margin: 0;
   padding: 12px;
   background: var(--bg);

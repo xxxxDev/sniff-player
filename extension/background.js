@@ -226,8 +226,9 @@ async function inspectOne(tabId, entry) {
   )));
 }
 
-// Playing in the page, when either setting is on: on a press of play (on unless the person turns
-// it off), or for the one video of a page that starts by itself (off unless turned on). A found video takes the place of the site's player
+// Playing in the page, with "Use Sniff Player when you press play" on (unless the person turns it
+// off): a video they press play on, and with "Play when the page loads" the one video of a page
+// that starts as it loads. A found video takes the place of the site's player
 // in the frame that loaded it, built into that page so that it makes the page's own requests. One
 // swap per tab at a time: the next video started takes over from the last. A frame where the
 // person went back to the site's player is left alone
@@ -247,7 +248,7 @@ async function swapState(tabId) {
 async function maybeEmbed(tabId, frameId, found) {
   if (claimed.has(tabId)) return;
   const { onPress, onLoad } = await swapSettings();
-  if ((!onPress && !onLoad) || claimed.has(tabId)) return;
+  if (!onPress || claimed.has(tabId)) return;
   // Taken before anything else waits, so that the playlists of one video make one swap.
   claimed.add(tabId);
   try {

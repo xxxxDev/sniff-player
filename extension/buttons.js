@@ -559,10 +559,15 @@
   // With "Use Sniff Player when you press play" off, a press of play with "Fill the page when you
   // press play" fills the page with the site's own player. "Leave the filled page when the video
   // ends" leaves when a site's player filling the page ends, however it was filled.
-  const PLAY_SETTINGS = ['swapOnPress', 'fillOnPlay', 'unfillOnEnd'];
-  let onPlay = { swapOnPress: true, fillOnPlay: false, unfillOnEnd: false };
+  const PLAY_SETTINGS = ['swapOnPress', 'playInPage', 'fillOnPlay', 'unfillOnEnd'];
+  let onPlay = null;
   function applyPlaySettings(stored) {
-    onPlay = { swapOnPress: stored.swapOnPress !== false, fillOnPlay: stored.fillOnPlay === true, unfillOnEnd: stored.unfillOnEnd === true };
+    const first = !onPlay;
+    onPlay = {
+      swapOnPress: stored.swapOnPress !== false, playInPage: stored.playInPage === true,
+      fillOnPlay: stored.fillOnPlay === true, unfillOnEnd: stored.unfillOnEnd === true,
+    };
+    if (first && onPlay.playInPage) playOnLoad();
   }
   try {
     chrome.storage.local.get(PLAY_SETTINGS).then(applyPlaySettings, () => {});
@@ -578,12 +583,52 @@
     const video = event.target;
     if (!(video instanceof HTMLVideoElement) || !navigator.userActivation?.isActive) return;
     pressedPlay.add(video);
-    if (!onPlay.swapOnPress && onPlay.fillOnPlay && !filled && isLargeEnough(video)) fillVideo(video);
+    if (onPlay && !onPlay.swapOnPress && onPlay.fillOnPlay && !filled && isLargeEnough(video)) fillVideo(video);
   }, true);
   document.addEventListener('ended', (event) => {
-    if (onPlay.unfillOnEnd && filled && filled.video === event.target) leaveEverywhere();
+    if (onPlay?.unfillOnEnd && filled && filled.video === event.target) leaveEverywhere();
   }, true);
   globalThis.__sniffPlayerPressedPlay = (video) => pressedPlay.has(video);
+
+  // "Play when the page loads": while the page loads, its one video starts as soon as it can, muted
+  // if the browser won't let it start with sound. Sniff Player takes it over when that setting is
+  // on; otherwise, with "Fill the page when you press play", the site's own player fills the page,
+  // in the top page only, where nothing but the page itself is covered. Not a clip under a minute,
+  // a site's intro or an ad say, and not once the person has pressed anything.
+  const LOAD_TRIES = 40;
+  const LOAD_INTERVAL_MS = 500;
+  const LOAD_MIN_SECONDS = 60;
+  // A press on this page. Not navigator.userActivation.hasBeenActive, which Chrome carries over from
+  // the click on a link to this page.
+  let pressedHere = false;
+  for (const type of ['pointerdown', 'keydown']) {
+    window.addEventListener(type, (event) => { if (event.isTrusted) pressedHere = true; }, true);
+  }
+  function playOnLoad() {
+    let tries = 0;
+    let started = null;
+    const timer = setInterval(() => {
+      tries += 1;
+      if (tries > LOAD_TRIES || pressedHere || filled) {
+        clearInterval(timer);
+        return;
+      }
+      const videos = [...document.querySelectorAll('video')].filter((video) => video.isConnected && isLargeEnough(video));
+      if (videos.length !== 1) return;
+      const [video] = videos;
+      if (video.paused && !video.ended && (video.currentSrc || video.src || video.querySelector('source')) && started !== video) {
+        started = video;
+        video.play().catch(() => {
+          video.muted = true;
+          video.play().catch(() => {});
+        });
+        return;
+      }
+      if (video.paused || !(video.duration >= LOAD_MIN_SECONDS)) return;
+      clearInterval(timer);
+      if (!onPlay.swapOnPress && onPlay.fillOnPlay && !inFrame) fillVideo(video);
+    }, LOAD_INTERVAL_MS);
+  }
 
   // Messages from the worker: other frames of this tab
 

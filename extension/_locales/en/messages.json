@@ -3,7 +3,7 @@
     "message": "Find the videos a page loads, HLS and MP4 included, and play them in one click. V-AX (v-ax.com)"
   },
   "emptyList": {
-    "message": "No videos found in this tab yet. Start the video, or reload the page."
+    "message": "No videos in this tab yet. Play the video, or reload the page."
   },
   "pastePlaceholder": {
     "message": "Or paste a video URL (m3u8, mp4)"
@@ -147,7 +147,7 @@
     "message": "Use Sniff Player when you press play"
   },
   "swapOnPressHint": {
-    "message": "Press play on a video in a page and Sniff Player takes the site player's place."
+    "message": "Press play on a video and Sniff Player takes the site player's place."
   },
   "playInPage": {
     "message": "Play when the page loads"
@@ -168,7 +168,7 @@
     "message": "Buttons on videos"
   },
   "videoButtonsHint": {
-    "message": "Shown at a video's top right corner when the pointer is on it. F2 and F3 work either way."
+    "message": "At a video's top right corner, with the pointer on it. F2 and F3 always work."
   },
   "pipNeedsClick": {
     "message": "Click the video first, then try again."

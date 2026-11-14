@@ -1,5 +1,5 @@
-// Put into a frame when a video was found there and one of the two settings is on: "Use Sniff
-// Player when you press play" (on unless turned off) or "Play when the page loads". It swaps the
+// Put into a frame when a video was found there and "Use Sniff Player when you press play" is on
+// (unless the person turns it off), or for the Sniff Player button on a video. It swaps the
 // site's player for Sniff Player in the same place, and fills the window when asked.
 //
 // The player is built into the page itself, in a closed shadow root. Its requests are the page's
@@ -182,7 +182,7 @@
   }
 
   function swap(video, url, kind, pageTitle, options = {}) {
-    const { fillOnPlay = false, unfillOnEnd = false, pressed = false } = options;
+    const { fillOnPlay = false, unfillOnEnd = false, pressed = false, loaded = false } = options;
     video.removeEventListener('play', swapAgain);
     handedBack.delete(video);
     const player = playerOf(video);
@@ -240,9 +240,10 @@
     }
     play(state);
     host.focus({ preventScroll: true });
-    // Only after a real press on the site's player, so that a video starting by itself, an ad's
-    // say, never takes over the window.
-    if (fillOnPlay && navigator.userActivation?.isActive) {
+    // After a real press on the site's player, or for the one video of a page played as it loads,
+    // which the person asked for with "Play when the page loads". Any other video starting by
+    // itself, an ad's say, never takes over the window, nor does a frame without a press.
+    if (fillOnPlay && (navigator.userActivation?.isActive || (loaded && !inFrame))) {
       state.ui.setFilled(true);
       fillHere(host);
     }
@@ -434,15 +435,17 @@
         continue;
       }
       if (video) {
-        // Pressed play: swapped when that setting is on. Started by itself: only when the page
-        // has this one video and "Play when the page loads" is on.
+        // Only with "Use Sniff Player when you press play" on. Pressed play: swapped. Started by
+        // itself: only when the page has this one video and "Play when the page loads" is on.
+        if (onPress !== true) return { ok: false };
         const pressed = pressedPlay(video);
-        const allowed = pressed ? onPress === true
-          : onLoad === true && allVideos().filter((each) => each.isConnected && bigEnough(each)).length === 1;
+        const allowed = pressed
+          || (onLoad === true && allVideos().filter((each) => each.isConnected && bigEnough(each)).length === 1);
         if (!allowed) {
-          if (!pressed && onPress === true) swapWhenPressed(video, { url, kind, title, options });
+          swapWhenPressed(video, { url, kind, title, options });
           return { ok: false };
         }
+        if (!pressed) options.loaded = true;
         // Another video on the page started, the next episode say: it takes over from the last.
         if (current) restore(null, true, true);
         swap(video, url, kind, title, options);

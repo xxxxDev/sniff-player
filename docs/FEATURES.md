@@ -51,11 +51,11 @@ In the popup, under **Buttons on videos**, untick the ones you don't want; with 
 
 ## Play in the page
 
-On by default. When you press play on a video in a page, Sniff Player pauses the site's player and takes its place, at the same size, from the same point of the video. Four settings at the bottom of the list, each on its own:
+On by default. When you press play on a video in a page, Sniff Player pauses the site's player and takes its place, at the same size, from the same point of the video. Four settings at the bottom of the list work together:
 
-- **Use Sniff Player when you press play.** On by default. A video that starts by itself, without your press, stays with the site; press play on it later and Sniff Player takes over.
-- **Play when the page loads.** Off by default. Sniff Player also takes over a video that starts by itself, but only on a page with a single video.
-- **Fill the page when you press play** and **Leave the filled page when the video ends.** Off by default. With the first setting on, they apply to Sniff Player; with it off, to the site's own player. A video that starts by itself, without your press, doesn't fill the page.
+- **Use Sniff Player when you press play.** On by default. It decides which player plays: Sniff Player, or with it off the site's own. A video that starts by itself, without your press, stays with the site; press play on it later and Sniff Player takes over.
+- **Play when the page loads.** Off by default. On a page with a single video, the video starts as the page loads, in Sniff Player or the site's player as set above.
+- **Fill the page when you press play** and **Leave the filled page when the video ends.** Off by default. They apply to whichever player plays. With Play when the page loads on as well, the video fills the page as soon as it starts. Any other video that starts by itself, an ad say, doesn't fill the page.
 
 - **Sound as the site had it.** Sniff Player starts at full volume, muted if the site's player was muted, and its sound button or volume bar turns the sound on.
 - **The right video on a page of several.** A video file is matched by its URL. A stream is matched to the video you just started: of those playing, the largest.
