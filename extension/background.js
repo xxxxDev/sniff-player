@@ -245,6 +245,22 @@ async function swapState(tabId) {
   return (await chrome.storage.session.get(swapKey(tabId)))[swapKey(tabId)] || { frameId: null, declined: [] };
 }
 
+// A video found in a frame where nobody has pressed play yet waits here, keyed by tab and frame,
+// until the person does: nothing goes into a page they only opened, unless "Play when the page
+// loads" is on. Lost if the worker stops, as is a press that comes later then.
+const waitingForPress = new Map();
+const pressKey = (tabId, frameId) => `${tabId}:${frameId}`;
+
+// Asked of the buttons' script in that frame, in the extension's isolated world: whether a real
+// press started a video there just now. A frame it leaves out answers by the press alone.
+async function pressedInFrame(tabId, frameId) {
+  const [result] = await chrome.scripting.executeScript({
+    target: { tabId, frameIds: [frameId] },
+    func: () => globalThis.__sniffPlayerPressedRecently?.() ?? !!navigator.userActivation?.isActive,
+  }).catch(() => []);
+  return result?.result === true;
+}
+
 async function maybeEmbed(tabId, frameId, found) {
   if (claimed.has(tabId)) return;
   const { onPress, onLoad } = await swapSettings();
@@ -256,6 +272,11 @@ async function maybeEmbed(tabId, frameId, found) {
     if (state.declined.includes(frameId)) return;
     const tab = await chrome.tabs.get(tabId).catch(() => null);
     if (!tab || !/^https?:/.test(tab.url || '')) return;
+    if (!onLoad && !(await pressedInFrame(tabId, frameId))) {
+      waitingForPress.set(pressKey(tabId, frameId), found);
+      return;
+    }
+    waitingForPress.delete(pressKey(tabId, frameId));
     await chrome.scripting.executeScript({
       target: { tabId, frameIds: [frameId] },
       files: ['vendor/hls.min.js', 'ui.js', 'embed.js'],
@@ -336,6 +357,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.tabs.sendMessage(tabId, message).catch(() => {});
     return false;
   }
+  if (message.type === 'pressedPlay') {
+    // The person pressed play in this frame: a video found there before the press swaps now.
+    const key = pressKey(tabId, sender.frameId);
+    const found = waitingForPress.get(key);
+    if (found) {
+      waitingForPress.delete(key);
+      maybeEmbed(tabId, sender.frameId, found);
+    }
+    return false;
+  }
   if (message.type === 'swapHere') {
     swapHere(tabId, sender, typeof message.src === 'string' ? message.src : '').then(sendResponse);
     return true;
@@ -396,7 +427,9 @@ chrome.webNavigation.onCommitted.addListener((details) => {
       declined: state.declined.filter((id) => id !== details.frameId),
     } });
   });
+  waitingForPress.delete(pressKey(details.tabId, details.frameId));
   if (details.frameId !== 0) return;
+  for (const key of waitingForPress.keys()) if (key.startsWith(`${details.tabId}:`)) waitingForPress.delete(key);
   const seen = seenByTab.get(details.tabId);
   seenByTab.delete(details.tabId);
   updateTab(details.tabId, (entries) => entries.filter((entry) => (
@@ -406,6 +439,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 
 chrome.tabs.onRemoved.addListener((tabId) => {
   chrome.storage.session.remove(swapKey(tabId));
+  for (const key of waitingForPress.keys()) if (key.startsWith(`${tabId}:`)) waitingForPress.delete(key);
   pending.delete(tabId);
   seenByTab.delete(tabId);
   // Through the same queue, so a write in progress can't put the data back after the removal.

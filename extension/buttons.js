@@ -172,9 +172,12 @@
   const SITE_PIP = /(^|[-_\s])pip([-_\s]|$)|picture[-_\s]?in[-_\s]?picture|\u756b\u4e2d\u756b|\u753b\u4e2d\u753b|\u5b50\u6bcd\u756b\u9762/i;
   // The first in the page's order, so the control itself rather than the icon in it. Not one the
   // site hides: a player shows only the controls that work.
+  // Never a link or a form's submit button, which a player's box can hold too (a suggested video
+  // labelled with these words, say).
   function siteControl(target, pattern) {
     if (!target || target.tagName === 'VIDEO') return null;
     return [...target.querySelectorAll('[aria-label], [title], [class]')].find((element) => {
+      if (element.closest('a[href]') || element.matches('[type="submit"]')) return false;
       const label = `${element.getAttribute('aria-label') || ''} ${element.getAttribute('title') || ''} ${element.getAttribute('class') || ''}`;
       return pattern.test(label) && element.checkVisibility();
     }) || null;
@@ -292,6 +295,12 @@
 
   function leaveHere() {
     if (filled) clearFill();
+    // Esc, or another frame leaving: a site's own fill in a frame goes with it.
+    if (siteFilled && inFrame) {
+      const { control } = siteFilled;
+      siteFilled = null;
+      if (control.isConnected) control.click();
+    }
   }
 
   function leaveEverywhere() {
@@ -317,14 +326,28 @@
       return;
     }
     if (document.fullscreenElement || filled) return;
-    const control = siteFillControl(playerOf(video));
+    const player = playerOf(video);
+    const control = siteFillControl(player);
     if (control) {
+      // Whether this press turns it on or off: in the top page, whether the player covers the
+      // window; in a frame, whose player covers the frame either way, what this script last did.
+      // In a frame the frames above fill as well, as with our own way, and leave with it.
+      const on = inFrame ? siteFilled?.video === video : coversWindow(player);
       control.click();
+      if (on) {
+        siteFilled = null;
+        if (inFrame) leaveEverywhere();
+      } else {
+        siteFilled = { video, control };
+        askParentToFill();
+      }
       return;
     }
-    applyFill(playerOf(video), video);
+    applyFill(player, video);
     askParentToFill();
   }
+  // The site's own fill, pressed by this script; the frames above may be filling for it.
+  let siteFilled = null;
 
   const vouchedTokens = new Set();
   let leaveCount = 0;
@@ -637,7 +660,8 @@
   // Filling the page on its own, from the two settings: with the site's own control when its player
   // has one, pressed again to leave; otherwise as the Fill the page button does.
   function autoFill(video) {
-    if (filled || document.fullscreenElement || coversWindow(playerOf(video))) return;
+    if (filled || document.fullscreenElement) return;
+    if (inFrame ? siteFilled : coversWindow(playerOf(video))) return;
     fillVideo(video);
   }
   // Only the first press of play on a video, and a moment later: a double click, which many players
@@ -646,45 +670,64 @@
   const pressedPlay = new WeakSet();
   let lastDoubleClick = -Infinity;
   document.addEventListener('dblclick', (event) => { if (event.isTrusted) lastDoubleClick = Date.now(); }, true);
+  // A press that started a video tells the worker, which may have a video found here waiting for
+  // one. A frame fills the page around it only after a press on that player itself, not a click
+  // anywhere in the frame followed by the page starting a video.
+  const PRESS_RECENT_MS = 15000;
+  let lastPressedPlay = -Infinity;
+  globalThis.__sniffPlayerPressedRecently = () => Date.now() - lastPressedPlay < PRESS_RECENT_MS;
   document.addEventListener('play', (event) => {
     const video = event.target;
-    if (!(video instanceof HTMLVideoElement) || !navigator.userActivation?.isActive) return;
+    if (!event.isTrusted || !(video instanceof HTMLVideoElement) || !navigator.userActivation?.isActive) return;
     const first = !pressedPlay.has(video);
     pressedPlay.add(video);
+    lastPressedPlay = Date.now();
+    try {
+      chrome.runtime.sendMessage({ sniff: true, type: 'pressedPlay' }).catch(() => {});
+    } catch {
+      // Cut off from the extension.
+    }
     if (!first || !onPlay || onPlay.swapOnPress || !onPlay.fillOnPlay) return;
+    if (inFrame && !(Date.now() - lastPointer.time < PRESS_RECENT_MS && isInside(playerOf(video), lastPointer.target))) return;
     const pressedAt = Date.now();
     setTimeout(() => {
       if (video.paused || document.fullscreenElement || lastDoubleClick >= pressedAt || !isLargeEnough(video)) return;
       autoFill(video);
     }, AUTO_FILL_DELAY_MS);
   }, true);
+  // Only a fill of this video that this script made, ours or the site's: not an ad before it, nor
+  // a player that fills its frame anyway.
   document.addEventListener('ended', (event) => {
-    if (!onPlay?.unfillOnEnd || !(event.target instanceof HTMLVideoElement)) return;
+    if (!event.isTrusted || !onPlay?.unfillOnEnd || !(event.target instanceof HTMLVideoElement)) return;
     if (filled) {
       if (filled.video === event.target) leaveEverywhere();
       return;
     }
-    const player = playerOf(event.target);
-    const control = siteFillControl(player);
-    if (control && coversWindow(player)) control.click();
+    if (siteFilled?.video === event.target) fillVideo(event.target);
   }, true);
   globalThis.__sniffPlayerPressedPlay = (video) => pressedPlay.has(video);
 
-  // "Play when the page loads": while the page loads, its one video starts as soon as it can, muted
-  // if the browser won't let it start with sound. Sniff Player takes it over when that setting is
-  // on; otherwise, with "Fill the page when you press play", the site's own player fills the page,
-  // in the top page only, where nothing but the page itself is covered. Not a clip under a minute,
-  // a site's intro or an ad say, and not once the person has pressed anything.
+  // "Play when the page loads": while the top page loads, its one video starts as soon as it can,
+  // muted only if the browser won't let it start with sound. Not in a frame, whose page can't see
+  // the other frames' videos, and not once the person has pressed anything. Sniff Player takes it
+  // over when that setting is on; otherwise, with "Fill the page when you press play", the site's
+  // own player fills the page, but not for a clip under a minute, a site's intro or an ad say.
   const LOAD_TRIES = 40;
   const LOAD_INTERVAL_MS = 500;
   const LOAD_MIN_SECONDS = 60;
   // A press on this page. Not navigator.userActivation.hasBeenActive, which Chrome carries over from
   // the click on a link to this page.
   let pressedHere = false;
+  let lastPointer = { time: -Infinity, target: null };
   for (const type of ['pointerdown', 'keydown']) {
-    window.addEventListener(type, (event) => { if (event.isTrusted) pressedHere = true; }, true);
+    window.addEventListener(type, (event) => {
+      if (!event.isTrusted) return;
+      pressedHere = true;
+      if (type === 'pointerdown') lastPointer = { time: Date.now(), target: event.composedPath()[0] || event.target };
+    }, true);
   }
   function playOnLoad() {
+    if (inFrame) return;
     let tries = 0;
     let started = null;
     const timer = setInterval(() => {
@@ -698,7 +741,8 @@
       const [video] = videos;
       if (video.paused && !video.ended && (video.currentSrc || video.src || video.querySelector('source')) && started !== video) {
         started = video;
-        video.play().catch(() => {
+        video.play().catch((error) => {
+          if (error?.name !== 'NotAllowedError') return;
           video.muted = true;
           video.play().catch(() => {});
         });

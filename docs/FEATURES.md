@@ -54,7 +54,7 @@ In the popup, under **Buttons on videos**, untick the ones you don't want; with 
 On by default. When you press play on a video in a page, Sniff Player pauses the site's player and takes its place, at the same size, from the same point of the video. Four settings at the bottom of the list work together:
 
 - **Use Sniff Player when you press play.** On by default. It decides which player plays: Sniff Player, or with it off the site's own. A video that starts by itself, without your press, stays with the site; press play on it later and Sniff Player takes over.
-- **Play when the page loads.** Off by default. On a page with a single video, the video starts as the page loads, in Sniff Player or the site's player as set above.
+- **Play when the page loads.** Off by default. On a page with a single video, the video starts as the page loads, in Sniff Player or the site's player as set above, muted only if the browser won't allow sound. This counts the page itself, not a player it holds in a frame from another site.
 - **Fill the page when you press play** and **Leave the filled page when the video ends.** Off by default. They apply to whichever player plays. With Play when the page loads on as well, the video fills the page as soon as it starts. Fill the page when you press play acts on the first press of play on a video, and not on a double click, which a site's player may take for full screen. Any other video that starts by itself, an ad say, doesn't fill the page. A site's player with its own fill-the-page button is filled with that button, as with Fill the page above.
 
 - **Sound as the site had it.** Sniff Player starts at full volume, muted if the site's player was muted, and its sound button or volume bar turns the sound on.

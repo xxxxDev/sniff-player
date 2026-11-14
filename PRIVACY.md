@@ -9,8 +9,8 @@ This policy covers the Sniff Player browser extension, published by V-AX.
 ## What the extension handles
 
 - **Web history and site content:** the URLs and response headers of the requests your tabs make, and each tab's URL and title. The extension uses them only to recognise HLS playlists and video files, and to name the player tab. It doesn't read the content of the pages you visit, except as described next.
-- **Play in the page (on by default when you press play on a video; for a page's only video as it loads, only if you turn it on):** in a frame where a video was found, the extension reads the page's video elements, to find the one that loaded the video, and the page's title and the heading near the video, to name it. It doesn't keep or send them.
-- **Buttons on videos:** a small script in every page finds the video under the pointer, to show its buttons, and notes whether you started a video, for Play in the page. With Play when the page loads on, it also finds a page's only video to start it. It doesn't read anything else on the page, and keeps and sends nothing. Pressing Sniff Player on a video works as Play in the page does, for that video.
+- **Play in the page (on by default when you press play on a video; for a page's only video as it loads, only if you turn it on):** in a frame where a video was found, once you press play there (or, with Play when the page loads on, as soon as it's found), the extension reads the page's video elements, to find the one that loaded the video, and the page's title and the heading near the video, to name it. It doesn't keep or send them.
+- **Buttons on videos:** a small script in every page finds the video under the pointer, to show its buttons, and notes whether you started a video, for Play in the page. Inside a video's player it reads the class names, labels and titles of the controls, to press the player's own fill-the-page and picture-in-picture buttons for you. With Play when the page loads on, it also finds the top page's only video to start it, muted if the browser won't allow sound. It doesn't read anything else on the page, and keeps and sends nothing. Pressing Sniff Player on a video works as Play in the page does, for that video.
 - **The list of detected videos:** their URLs, qualities, length and size.
 - **URLs you paste** into the extension to play.
 
@@ -46,8 +46,8 @@ If this policy changes, the new version will be published at this address with a
 ### 擴充工具會處理的資料
 
 - **網頁記錄與網站內容：** 分頁發出的請求網址與回應標頭，以及每個分頁的網址和標題。只用來辨識 HLS 播放清單和影片檔，以及為播放分頁命名。除了下一項，不讀取你造訪網頁的內容。
-- **直接在網頁中播放（按下播放時預設開啟；網頁載入時直接播放要你開啟才會用）：** 在偵測到影片的框架裡，擴充工具會讀取網頁上的影片元素，找出載入該影片的那一個，並讀取網頁標題和影片附近的標題來命名。這些資料不會保存或傳送。
-- **影片上的按鈕：** 每個網頁裡都有一段小程式，找出滑鼠下的影片來顯示按鈕，並記下影片是不是你按播放的，供網頁中播放使用。開啟「網頁載入時直接播放」時，它也會找出頁面中唯一的影片並開始播放。它不讀網頁其他內容，也不保存或傳送任何資料。在影片上按 Sniff Player，就跟「直接在網頁中播放」一樣處理那支影片。
+- **直接在網頁中播放（按下播放時預設開啟；網頁載入時直接播放要你開啟才會用）：** 在偵測到影片的框架裡，等你在那裡按下播放後（開啟「網頁載入時直接播放」時則是一偵測到就開始），擴充工具會讀取網頁上的影片元素，找出載入該影片的那一個，並讀取網頁標題和影片附近的標題來命名。這些資料不會保存或傳送。
+- **影片上的按鈕：** 每個網頁裡都有一段小程式，找出滑鼠下的影片來顯示按鈕，並記下影片是不是你按播放的，供網頁中播放使用。在影片的播放器裡，它會讀取控制按鈕的 class 名稱、標籤和標題，好替你按播放器自己的網頁全螢幕和子母畫面按鈕。開啟「網頁載入時直接播放」時，它也會找出最上層頁面中唯一的影片並開始播放，瀏覽器不允許有聲播放時會改成靜音。它不讀網頁其他內容，也不保存或傳送任何資料。在影片上按 Sniff Player，就跟「直接在網頁中播放」一樣處理那支影片。
 - **偵測到的影片清單：** 影片網址、畫質、片長與大小。
 - **你貼上** 要播放的網址。
 
