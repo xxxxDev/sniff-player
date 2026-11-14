@@ -83,22 +83,16 @@ document.getElementById('manual').addEventListener('submit', (event) => {
   play({ url: document.getElementById('manual-url').value.trim() });
 });
 
-// Off unless the person turns it on. It runs a script in a page only once a video is found there.
-// The two below it apply only to a player in the page, so they wait until it is on.
-const settings = { playInPage: 'play-in-page', fillOnPlay: 'fill-on-play', unfillOnEnd: 'unfill-on-end' };
+// Each setting on its own. A press of play swaps unless the person turns it off; the rest are off
+// unless turned on. Either swap runs a script in a page only once a video is found there.
+const settings = { swapOnPress: 'swap-on-press', playInPage: 'play-in-page', fillOnPlay: 'fill-on-play', unfillOnEnd: 'unfill-on-end' };
+const onUnlessOff = new Set(['swapOnPress']);
 const stored = await chrome.storage.local.get(Object.keys(settings));
-const box = (name) => document.getElementById(settings[name]);
-const showEnabled = () => {
-  for (const name of ['fillOnPlay', 'unfillOnEnd']) box(name).disabled = !box('playInPage').checked;
-};
-for (const name of Object.keys(settings)) {
-  box(name).checked = stored[name] === true;
-  box(name).addEventListener('change', () => {
-    chrome.storage.local.set({ [name]: box(name).checked });
-    showEnabled();
-  });
+for (const [name, id] of Object.entries(settings)) {
+  const input = document.getElementById(id);
+  input.checked = onUnlessOff.has(name) ? stored[name] !== false : stored[name] === true;
+  input.addEventListener('change', () => chrome.storage.local.set({ [name]: input.checked }));
 }
-showEnabled();
 
 // The buttons shown on a video under the pointer. All three show unless the person turns one off.
 const buttonBoxes = { buttonPip: 'button-pip', buttonFill: 'button-fill', buttonSniff: 'button-sniff' };

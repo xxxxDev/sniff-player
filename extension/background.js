@@ -226,17 +226,18 @@ async function inspectOne(tabId, entry) {
   )));
 }
 
-// Playing in the page, when the setting is on. A found video takes the place of the site's player
+// Playing in the page, when either setting is on: on a press of play (on unless the person turns
+// it off), or for the one video of a page that starts by itself (off unless turned on). A found video takes the place of the site's player
 // in the frame that loaded it, built into that page so that it makes the page's own requests. One
 // swap per tab at a time: the next video started takes over from the last. A frame where the
 // person went back to the site's player is left alone
 // until it navigates. Kept in storage.session, because this worker can stop at any time.
-const SETTING = 'playInPage';
 const swapKey = (tabId) => `swap:${tabId}`;
 const claimed = new Set(); // Tabs with a swap starting, before storage has caught up.
 
-async function playInPageOn() {
-  return (await chrome.storage.local.get(SETTING))[SETTING] === true;
+async function swapSettings() {
+  const stored = await chrome.storage.local.get(['swapOnPress', 'playInPage']);
+  return { onPress: stored.swapOnPress !== false, onLoad: stored.playInPage === true };
 }
 
 async function swapState(tabId) {
@@ -244,7 +245,9 @@ async function swapState(tabId) {
 }
 
 async function maybeEmbed(tabId, frameId, found) {
-  if (claimed.has(tabId) || !(await playInPageOn()) || claimed.has(tabId)) return;
+  if (claimed.has(tabId)) return;
+  const { onPress, onLoad } = await swapSettings();
+  if ((!onPress && !onLoad) || claimed.has(tabId)) return;
   // Taken before anything else waits, so that the playlists of one video make one swap.
   claimed.add(tabId);
   try {
@@ -259,7 +262,7 @@ async function maybeEmbed(tabId, frameId, found) {
     const { fillOnPlay, unfillOnEnd } = await chrome.storage.local.get(['fillOnPlay', 'unfillOnEnd']);
     const result = await chrome.tabs.sendMessage(tabId, {
       sniff: true, type: 'embed', url: found.url, kind: found.kind, title: tab.title,
-      fillOnPlay: fillOnPlay === true, unfillOnEnd: unfillOnEnd === true,
+      fillOnPlay: fillOnPlay === true, unfillOnEnd: unfillOnEnd === true, onPress, onLoad,
     }, { frameId });
     if (!result?.ok) return;
     // One swap per tab: a video started in another frame takes over from the last one.

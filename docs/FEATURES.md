@@ -49,16 +49,19 @@ In the popup, under **Buttons on videos**, untick the ones you don't want; with 
   <img src="../.github/assets/screens/buttons-en.png" alt="A video on a made-up site, with the Picture-in-picture, Fill the page and Sniff Player buttons above its top right corner">
 </p>
 
-## Play in the page (experimental)
+## Play in the page
 
-Off by default. Turn it on with the checkbox at the bottom of the list. When a video starts on a page, Sniff Player pauses the site's player and takes its place, at the same size, from the same point of the video.
+On by default. When you press play on a video in a page, Sniff Player pauses the site's player and takes its place, at the same size, from the same point of the video. Four settings at the bottom of the list, each on its own:
+
+- **Use Sniff Player when you press play.** On by default. A video that starts by itself, without your press, stays with the site; press play on it later and Sniff Player takes over.
+- **Play when the page loads.** Off by default. Sniff Player also takes over a video that starts by itself, but only on a page with a single video.
+- **Fill the page when you press play** and **Leave the filled page when the video ends.** Off by default. With the first setting on, they apply to Sniff Player; with it off, to the site's own player. A video that starts by itself, without your press, doesn't fill the page.
 
 - **Sound as the site had it.** Sniff Player starts at full volume, muted if the site's player was muted, and its sound button or volume bar turns the sound on.
 - **The right video on a page of several.** A video file is matched by its URL. A stream is matched to the video you just started: of those playing, the largest.
 - **The next one takes over.** Start another video on the page, the next episode say, and Sniff Player moves there. The last one goes back to the site's player, paused at the point you reached, and playing it again brings Sniff Player back to it.
 - **Short clips stay with the site.** A clip under a minute, a site's intro or an ad say, plays on in the site's player, with anything the site asks first, such as an age check. Sniff Player takes over when the episode starts.
 - **Fill the page.** The button between volume and full screen makes the player fill the browser window, with the rest of the page out of the way. Press it again, or <kbd>Esc</kbd> or <kbd>W</kbd>, to go back.
-- **Fill the page on its own.** Two options under the setting, both off by default: fill the page when you press play on the site's player, and leave it when the video ends. A video that starts by itself, without your press, doesn't fill the page.
 - **Back to the site's player.** A button on the bar, at the point you reached. Sniff Player then leaves that frame alone until it goes to another page.
 - **When it does nothing.** The script that swaps the player runs in a page only once a video is found there. Some sites rebuild their player, and Sniff Player then gives the place back to the site.
 

@@ -1,4 +1,5 @@
-// Put into a frame only when "Play in the page" is on and a video was found there. It swaps the
+// Put into a frame when a video was found there and one of the two settings is on: "Use Sniff
+// Player when you press play" (on unless turned off) or "Play when the page loads". It swaps the
 // site's player for Sniff Player in the same place, and fills the window when asked.
 //
 // The player is built into the page itself, in a closed shadow root. Its requests are the page's
@@ -395,7 +396,35 @@
     else unfill();
   }, true);
 
-  async function findAndSwap({ url, kind, title, fillOnPlay, unfillOnEnd }) {
+  // Whether the person started this video, rather than the page. buttons.js saw its play event,
+  // unless the site is one it leaves out or the video is in a shadow root; then the press alone.
+  function pressedPlay(video) {
+    const seen = globalThis.__sniffPlayerPressedPlay;
+    if (seen && video.getRootNode() === document) return seen(video);
+    return !!navigator.userActivation?.isActive;
+  }
+
+  // A video that started by itself and wasn't swapped: pressing play on it later swaps it, as long
+  // as it still plays what was found.
+  const waitingForPress = new WeakSet();
+  function swapWhenPressed(video, found) {
+    if (waitingForPress.has(video)) return;
+    waitingForPress.add(video);
+    const source = video.currentSrc;
+    const onPlay = () => {
+      if (!navigator.userActivation?.isActive) return;
+      video.removeEventListener('play', onPlay);
+      waitingForPress.delete(video);
+      if (!alive() || !video.isConnected || video.currentSrc !== source || current?.video === video) return;
+      if (current) restore(null, true, true);
+      swap(video, found.url, found.kind, found.title, found.options);
+      tellWorker({ type: 'swapped' });
+    };
+    video.addEventListener('play', onPlay);
+  }
+
+  async function findAndSwap({ url, kind, title, fillOnPlay, unfillOnEnd, onPress, onLoad }) {
+    const options = { fillOnPlay: fillOnPlay === true, unfillOnEnd: unfillOnEnd === true };
     for (let tries = 0; tries < FIND_TRIES; tries += 1) {
       const video = findVideo(url);
       if (video && current && (video === current.video || url === current.url)) return { ok: false };
@@ -405,9 +434,18 @@
         continue;
       }
       if (video) {
+        // Pressed play: swapped when that setting is on. Started by itself: only when the page
+        // has this one video and "Play when the page loads" is on.
+        const pressed = pressedPlay(video);
+        const allowed = pressed ? onPress === true
+          : onLoad === true && allVideos().filter((each) => each.isConnected && bigEnough(each)).length === 1;
+        if (!allowed) {
+          if (!pressed && onPress === true) swapWhenPressed(video, { url, kind, title, options });
+          return { ok: false };
+        }
         // Another video on the page started, the next episode say: it takes over from the last.
         if (current) restore(null, true, true);
-        swap(video, url, kind, title, { fillOnPlay: fillOnPlay === true, unfillOnEnd: unfillOnEnd === true });
+        swap(video, url, kind, title, options);
         return { ok: true };
       }
       await new Promise((resolve) => { setTimeout(resolve, FIND_INTERVAL_MS); });

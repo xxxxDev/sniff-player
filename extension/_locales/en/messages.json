@@ -143,11 +143,17 @@
   "volume": {
     "message": "Volume"
   },
+  "swapOnPress": {
+    "message": "Use Sniff Player when you press play"
+  },
+  "swapOnPressHint": {
+    "message": "Press play on a video in a page and Sniff Player takes the site player's place."
+  },
   "playInPage": {
-    "message": "Play in the page (experimental)"
+    "message": "Play when the page loads"
   },
   "playInPageHint": {
-    "message": "When a video starts, Sniff Player takes the site player's place on the page."
+    "message": "Only on a page with a single video."
   },
   "tapToUnmute": {
     "message": "Click to turn the sound on"

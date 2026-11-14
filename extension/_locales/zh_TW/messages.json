@@ -143,11 +143,17 @@
   "volume": {
     "message": "音量"
   },
+  "swapOnPress": {
+    "message": "按下播放時改用 Sniff Player"
+  },
+  "swapOnPressHint": {
+    "message": "在網頁上按影片播放，Sniff Player 會取代網頁上原本的播放器。"
+  },
   "playInPage": {
-    "message": "直接在網頁中播放（試驗）"
+    "message": "網頁載入時直接播放"
   },
   "playInPageHint": {
-    "message": "影片開始播放時，Sniff Player 會取代網頁上原本的播放器。"
+    "message": "僅限頁面中只有一個影片時。"
   },
   "tapToUnmute": {
     "message": "點一下開啟聲音"

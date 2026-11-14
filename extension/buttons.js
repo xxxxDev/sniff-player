@@ -553,6 +553,38 @@
     }
   }, true);
 
+  // Videos the person started: a play while the frame has a real press, a click on the site's
+  // play button say. A swap on a press uses it to tell them from a video starting by itself. The
+  // play event doesn't leave a shadow root, so a video in one is judged by the press alone.
+  // With "Use Sniff Player when you press play" off, a press of play with "Fill the page when you
+  // press play" fills the page with the site's own player. "Leave the filled page when the video
+  // ends" leaves when a site's player filling the page ends, however it was filled.
+  const PLAY_SETTINGS = ['swapOnPress', 'fillOnPlay', 'unfillOnEnd'];
+  let onPlay = { swapOnPress: true, fillOnPlay: false, unfillOnEnd: false };
+  function applyPlaySettings(stored) {
+    onPlay = { swapOnPress: stored.swapOnPress !== false, fillOnPlay: stored.fillOnPlay === true, unfillOnEnd: stored.unfillOnEnd === true };
+  }
+  try {
+    chrome.storage.local.get(PLAY_SETTINGS).then(applyPlaySettings, () => {});
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local' || !PLAY_SETTINGS.some((name) => name in changes)) return;
+      chrome.storage.local.get(PLAY_SETTINGS).then(applyPlaySettings, () => {});
+    });
+  } catch {
+    // Cut off from the extension: the defaults stand.
+  }
+  const pressedPlay = new WeakSet();
+  document.addEventListener('play', (event) => {
+    const video = event.target;
+    if (!(video instanceof HTMLVideoElement) || !navigator.userActivation?.isActive) return;
+    pressedPlay.add(video);
+    if (!onPlay.swapOnPress && onPlay.fillOnPlay && !filled && isLargeEnough(video)) fillVideo(video);
+  }, true);
+  document.addEventListener('ended', (event) => {
+    if (onPlay.unfillOnEnd && filled && filled.video === event.target) leaveEverywhere();
+  }, true);
+  globalThis.__sniffPlayerPressedPlay = (video) => pressedPlay.has(video);
+
   // Messages from the worker: other frames of this tab
 
   chrome.runtime.onMessage.addListener((message) => {
