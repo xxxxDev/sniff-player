@@ -57,7 +57,7 @@
 3. 按**播放**，或按**複製**取得網址。
 
 <p align="center">
-  <img src=".github/assets/screens/popup-zh-TW.png" width="380" alt="偵測到的影片清單：有三種畫質的 HLS 影片、標示大小的影片檔，以及一個直播">
+  <img src=".github/assets/screens/popup-zh-TW.png" width="430" alt="偵測到的影片清單：有三種畫質的 HLS 影片、標示大小的影片檔，以及一個直播">
 </p>
 
 在播放器裡：<kbd>空白鍵</kbd>或 <kbd>K</kbd> 播放暫停，<kbd>←</kbd> <kbd>→</kbd> 前後跳 5 秒，<kbd>M</kbd> 靜音，<kbd>F</kbd> 全螢幕。

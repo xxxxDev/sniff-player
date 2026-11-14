@@ -57,7 +57,7 @@ It needs Chrome 116 or later.
 3. Press **Play**, or **Copy** to take the URL.
 
 <p align="center">
-  <img src=".github/assets/screens/popup-en.png" width="380" alt="The list of detected videos: an HLS video with three qualities, a video file with its size, and a live stream">
+  <img src=".github/assets/screens/popup-en.png" width="430" alt="The list of detected videos: an HLS video with three qualities, a video file with its size, and a live stream">
 </p>
 
 In the player: <kbd>Space</kbd> or <kbd>K</kbd> plays and pauses, <kbd>←</kbd> <kbd>→</kbd> skip 5 seconds, <kbd>M</kbd> mutes, <kbd>F</kbd> goes full screen.
