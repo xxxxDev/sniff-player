@@ -159,8 +159,9 @@
 
   // A site player's own "fill the page" control, which keeps the player as the site made it. Found
   // by what players call it rather than by player: ArtPlayer's fullscreenWeb, DPlayer's full-in,
-  // xgplayer's cssfullscreen, and the labels and titles sites give such a button.
-  const SITE_FILL = /cssfullscreen|dplayer-full-in|fullscreen[-_\s]?web|web[-_\s]?full[-_\s]?screen|page[-_\s]?full[-_\s]?screen|網頁全屏|网页全屏|網頁全螢幕|网页全屏幕/i;
+  // xgplayer's cssfullscreen, and the labels and titles sites give such a button (in Chinese too,
+  // escaped here).
+  const SITE_FILL = /cssfullscreen|dplayer-full-in|fullscreen[-_\s]?web|web[-_\s]?full[-_\s]?screen|page[-_\s]?full[-_\s]?screen|\u7db2\u9801\u5168\u5c4f|\u7f51\u9875\u5168\u5c4f|\u7db2\u9801\u5168\u87a2\u5e55/i;
   function siteFillControl(target) {
     if (target.tagName === 'VIDEO') return null;
     return [...target.querySelectorAll('[aria-label], [title], [class]')].find((element) => {
