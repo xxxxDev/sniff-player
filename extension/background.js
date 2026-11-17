@@ -277,7 +277,9 @@ async function maybeEmbed(tabId, frameId, found, pressed = false) {
     if (state.declined.includes(frameId)) return;
     const tab = await chrome.tabs.get(tabId).catch(() => null);
     if (!tab || !/^https?:/.test(tab.url || '')) return;
-    if (!onLoad && !(await pressedInFrame(tabId, frameId))) {
+    // The frame playing Sniff Player already has the script, and decides there whether a video
+    // found after its site rebuilt the player, the next episode say, follows on without a press.
+    if (!onLoad && state.frameId !== frameId && !(await pressedInFrame(tabId, frameId))) {
       waitingForPress.set(pressKey(tabId, frameId), found);
       return;
     }
@@ -389,7 +391,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return false;
   }
-  if (message.type === 'restored') {
+  if (message.type === 'gone') {
+    // The site took its player away for good, without the person choosing the site's player.
+    swapState(tabId).then((state) => {
+      if (state.frameId !== sender.frameId) return;
+      chrome.storage.session.set({ [swapKey(tabId)]: { ...state, frameId: null } });
+    });
+  } else if (message.type === 'restored') {
     swapState(tabId).then((state) => {
       if (state.frameId !== sender.frameId) return;
       chrome.storage.session.set({ [swapKey(tabId)]: { frameId: null, declined: [...state.declined, sender.frameId] } });

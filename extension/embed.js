@@ -19,6 +19,9 @@
   // A site's intro or an ad before the episode is left to the site, with whatever it asks first.
   const MIN_SWAP_SECONDS = 60;
   const FIND_INTERVAL_MS = 500;
+  // A site that rebuilds its player, for the next episode say, has this long to load the new video
+  // for Sniff Player to take it over without another press.
+  const FOLLOW_MS = 30000;
   const FRAME_TAG = 'sniff-player-frame';
   // After the extension is updated or reloaded, this copy of the script is cut off from it, and
   // every extension call throws. The player then hands the place back to the site.
@@ -58,6 +61,9 @@
   const inFrame = window !== window.top;
   let current = null; // The swap in this frame.
   let filled = null; // The element filling the window in this frame: ours, or a child frame.
+  // After the site rebuilt its player under Sniff Player: until when, at which address, and whether
+  // it filled the window.
+  let following = null;
 
   function tellWorker(message) {
     if (!alive()) return Promise.resolve();
@@ -113,6 +119,11 @@
     const playing = started.filter((video) => !video.paused);
     const pick = (list) => list.reduce((best, video) => (!best || area(video) > area(best) ? video : best), null);
     return pick(playing) || pick(started);
+  }
+
+  function largestVideo() {
+    return allVideos().filter((video) => video.isConnected && bigEnough(video))
+      .reduce((best, video) => (!best || area(video) > area(best) ? video : best), null);
   }
 
   // The site's player: a known one, or the outermost box the same size as the video.
@@ -209,7 +220,7 @@
 
     // With one video the page's title names it. With several, its post's heading tells them apart.
     const heading = allVideos().filter(bigEnough).length > 1 ? headingOf(player) : '';
-    const state = { video, player, host, url, kind, startAt, pageTitle, options, ui: null, hls: null };
+    const state = { video, player, host, url, kind, startAt, pageTitle, options, href: location.href, ui: null, hls: null };
     state.ui = SniffPlayerUI.create({
       root,
       t,
@@ -243,15 +254,30 @@
     // After a real press on the site's player, or for the one video of a page played as it loads,
     // which the person asked for with "Play when the page loads". Any other video starting by
     // itself, an ad's say, never takes over the window, nor does a frame without a press.
-    if (fillOnPlay && (navigator.userActivation?.isActive || (loaded && !inFrame))) {
+    if (options.refill || (fillOnPlay && (navigator.userActivation?.isActive || (loaded && !inFrame)))) {
       state.ui.setFilled(true);
       fillHere(host);
     }
 
     // A site that rebuilds its player removes ours with it, or the hidden one.
-    state.watchdog = setInterval(() => {
-      if (!host.isConnected || !player.isConnected) restore(null, true);
-    }, 1000);
+    state.watchdog = setInterval(lostToSite, 1000);
+  }
+
+  // The site rebuilt its player under Sniff Player, for another episode say. That isn't the person
+  // going back to the site's player: the video the new one loads soon after plays in Sniff Player.
+  function lostToSite() {
+    const state = current;
+    if (!state || (state.host.isConnected && state.player.isConnected)) return;
+    // The address it played at: a site may change it before or after taking the player away.
+    const follow = { until: Date.now() + FOLLOW_MS, href: state.href, filled: filled === state.host };
+    following = follow;
+    restore(null, true, true);
+    // No new video came: this frame no longer plays Sniff Player.
+    setTimeout(() => {
+      if (following !== follow) return;
+      following = null;
+      if (!current) tellWorker({ type: 'gone' });
+    }, FOLLOW_MS);
   }
 
   // Videos handed back to the site when another took over, each with how it was swapped.
@@ -290,6 +316,7 @@
     state.player.removeAttribute('data-sniff-hidden');
     state.video.removeEventListener('play', keepPaused);
     if (handOver) {
+      if (!state.video.isConnected) return;
       if (Number.isFinite(reached) && reached > 0) state.video.currentTime = reached;
       // Going back to it, the last episode say, swaps it in again.
       handedBack.set(state.video, state);
@@ -424,10 +451,30 @@
     video.addEventListener('play', onPlay);
   }
 
-  async function findAndSwap({ url, kind, title, fillOnPlay, unfillOnEnd, onPress, onLoad }) {
+  // The page left the address Sniff Player played at: unless this look swaps a video in after all,
+  // the worker learns this frame no longer plays Sniff Player.
+  async function findAndSwap(message) {
+    const look = { left: false };
+    const result = await findAndSwapOnce(message, look);
+    if (!result.ok && look.left && !current) tellWorker({ type: 'gone' });
+    return result;
+  }
+
+  async function findAndSwapOnce({ url, kind, title, fillOnPlay, unfillOnEnd, onPress, onLoad }, look) {
     const options = { fillOnPlay: fillOnPlay === true, unfillOnEnd: unfillOnEnd === true };
+    lostToSite();
+    // Only at the same address: a site that took its player away to show another page hasn't
+    // moved on to the next episode.
+    const follows = () => {
+      if (following && following.href !== location.href) {
+        following = null;
+        look.left = true;
+      }
+      return !!following && following.until > Date.now();
+    };
     for (let tries = 0; tries < FIND_TRIES; tries += 1) {
-      const video = findVideo(url);
+      // A rebuilt player's video may wait for a press to play: the largest one on the page.
+      const video = findVideo(url) || (follows() ? largestVideo() : null);
       if (video && current && (video === current.video || url === current.url)) return { ok: false };
       // Its length may not be known yet, or still be the clip's before it, so look again.
       if (video && !(video.duration >= MIN_SWAP_SECONDS)) {
@@ -439,13 +486,16 @@
         // itself: only when the page has this one video and "Play when the page loads" is on.
         if (onPress !== true) return { ok: false };
         const pressed = pressedPlay(video);
-        const allowed = pressed
+        const followed = !pressed && follows();
+        const allowed = pressed || followed
           || (onLoad === true && allVideos().filter((each) => each.isConnected && bigEnough(each)).length === 1);
         if (!allowed) {
           swapWhenPressed(video, { url, kind, title, options });
           return { ok: false };
         }
-        if (!pressed) options.loaded = true;
+        if (followed) options.refill = following.filled;
+        else if (!pressed) options.loaded = true;
+        following = null;
         // Another video on the page started, the next episode say: it takes over from the last.
         if (current) restore(null, true, true);
         swap(video, url, kind, title, options);
